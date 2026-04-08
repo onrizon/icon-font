@@ -6,7 +6,6 @@ import { allocateCodepoints } from './codepoint-allocator';
 export interface GeneratedFontData {
   font: Font;
   ttfBuffer: ArrayBuffer;
-  woffBuffer: ArrayBuffer;
   codepointMap: Map<string, number>;
 }
 
@@ -64,7 +63,6 @@ export function generateFont(
   return {
     font,
     ttfBuffer,
-    woffBuffer: ttfBuffer,
     codepointMap,
   };
 }

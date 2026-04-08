@@ -19,7 +19,7 @@ export function useIconImport(projectId: string | null) {
       setErrors([]);
 
       const importErrors: string[] = [];
-      const iconsToAdd: Omit<IconGlyph, 'id' | 'order' | 'createdAt' | 'updatedAt'>[] = [];
+      const iconsToAdd: (Omit<IconGlyph, 'id' | 'order' | 'createdAt' | 'updatedAt'> & { id?: string })[] = [];
 
       for (const file of files) {
         try {
@@ -28,8 +28,17 @@ export function useIconImport(projectId: string | null) {
           const parsed = parseSvg(optimized, file.name);
           const normalized = normalizeSvg(parsed);
           const name = fileNameToIconName(file.name);
+          const iconId = crypto.randomUUID();
+
+          const formData = new FormData();
+          formData.append('file', new Blob([optimized], { type: 'image/svg+xml' }), file.name);
+          formData.append('projectId', projectId);
+          formData.append('iconId', iconId);
+          const uploadRes = await fetch('/api/upload-svg', { method: 'POST', body: formData });
+          const { url: r2Url } = await uploadRes.json();
 
           iconsToAdd.push({
+            id: iconId,
             projectId,
             name,
             svgContent: normalized.svgContent,
@@ -38,6 +47,7 @@ export function useIconImport(projectId: string | null) {
             width: normalized.width,
             height: normalized.height,
             tags: [],
+            r2Url,
           });
         } catch (err) {
           importErrors.push(`${file.name}: ${err instanceof Error ? err.message : 'Unknown error'}`);

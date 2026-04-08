@@ -1,27 +1,17 @@
-import JSZip from 'jszip';
-import { saveAs } from 'file-saver';
-import type { IconGlyph, Project } from '@/types';
 import { generateFont } from '@/lib/font-generation/opentype-generator';
-import { generateCSS } from '@/lib/font-generation/css-generator';
-import { generateHTMLDemo } from '@/lib/font-generation/html-demo-generator';
 import { compressWoff2 } from '@/lib/font-generation/woff2';
+import type { IconGlyph, Project } from '@/types';
+import { saveAs } from 'file-saver';
+import JSZip from 'jszip';
 
 export interface PackageOptions {
   includeTTF: boolean;
-  includeWOFF: boolean;
   includeWOFF2: boolean;
-  includeSVGFont: boolean;
-  includeCSS: boolean;
-  includeHTML: boolean;
 }
 
 const DEFAULT_OPTIONS: PackageOptions = {
   includeTTF: true,
-  includeWOFF: true,
   includeWOFF2: true,
-  includeSVGFont: false,
-  includeCSS: true,
-  includeHTML: true,
 };
 
 export async function downloadFontPackage(
@@ -32,9 +22,7 @@ export async function downloadFontPackage(
   const opts = { ...DEFAULT_OPTIONS, ...options };
   const { fontFamily } = project;
 
-  const { ttfBuffer, codepointMap } = generateFont(icons, project);
-  const css = generateCSS(icons, project, codepointMap);
-  const html = generateHTMLDemo(icons, project, codepointMap, css);
+  const { ttfBuffer } = generateFont(icons, project);
 
   const zip = new JSZip();
   const folder = zip.folder(fontFamily)!;
@@ -44,10 +32,6 @@ export async function downloadFontPackage(
     fontsFolder.file(`${fontFamily}.ttf`, ttfBuffer);
   }
 
-  if (opts.includeWOFF) {
-    fontsFolder.file(`${fontFamily}.woff`, ttfBuffer);
-  }
-
   if (opts.includeWOFF2) {
     try {
       const woff2Buffer = await compressWoff2(ttfBuffer);
@@ -55,14 +39,6 @@ export async function downloadFontPackage(
     } catch (e) {
       console.warn('WOFF2 compression failed, skipping:', e);
     }
-  }
-
-  if (opts.includeCSS) {
-    folder.file(`${fontFamily}.css`, css);
-  }
-
-  if (opts.includeHTML) {
-    folder.file('demo.html', html);
   }
 
   // Include SVG source files
@@ -78,10 +54,10 @@ export async function downloadFontPackage(
 export async function downloadSingleFormat(
   icons: IconGlyph[],
   project: Project,
-  format: 'ttf' | 'woff' | 'woff2' | 'css'
+  format: 'ttf' | 'woff2'
 ): Promise<void> {
   const { fontFamily } = project;
-  const { ttfBuffer, codepointMap } = generateFont(icons, project);
+  const { ttfBuffer } = generateFont(icons, project);
 
   switch (format) {
     case 'ttf': {
@@ -89,21 +65,10 @@ export async function downloadSingleFormat(
       saveAs(blob, `${fontFamily}.ttf`);
       break;
     }
-    case 'woff': {
-      const blob = new Blob([ttfBuffer], { type: 'font/woff' });
-      saveAs(blob, `${fontFamily}.woff`);
-      break;
-    }
     case 'woff2': {
       const woff2Buffer = await compressWoff2(ttfBuffer);
       const blob = new Blob([woff2Buffer], { type: 'font/woff2' });
       saveAs(blob, `${fontFamily}.woff2`);
-      break;
-    }
-    case 'css': {
-      const css = generateCSS(icons, project, codepointMap);
-      const blob = new Blob([css], { type: 'text/css' });
-      saveAs(blob, `${fontFamily}.css`);
       break;
     }
   }

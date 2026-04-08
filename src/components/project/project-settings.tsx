@@ -1,17 +1,17 @@
 'use client';
 
-import { useProjectStore } from '@/stores/project-store';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
-import { Download, Upload } from 'lucide-react';
-import { exportProject, importProject } from '@/lib/export/json-export';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { exportProject, importProject } from '@/lib/export/json-export';
+import { useProjectStore } from '@/stores/project-store';
+import { Download, Upload } from 'lucide-react';
 import { useCallback, useRef } from 'react';
 
 export function ProjectSettings() {
-  const { currentProject, currentProjectId, updateFontSettings, loadProjects } = useProjectStore();
+  const { currentProject, currentProjectId, updateProject, updateFontSettings, loadProjects } = useProjectStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = useCallback(async () => {
@@ -36,6 +36,20 @@ export function ProjectSettings() {
   return (
     <ScrollArea className="h-full">
       <div className="p-4 space-y-4">
+        <h3 className="font-medium">Project</h3>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="projectName" className="text-xs">Project Name</Label>
+          <Input
+            id="projectName"
+            value={currentProject.name}
+            onChange={e => updateProject(currentProject.id, { name: e.target.value })}
+            className="h-8"
+          />
+        </div>
+
+        <Separator />
+
         <h3 className="font-medium">Font Settings</h3>
 
         <div className="space-y-3">
@@ -55,16 +69,6 @@ export function ProjectSettings() {
               id="fontFamily"
               value={currentProject.fontFamily}
               onChange={e => updateFontSettings({ fontFamily: e.target.value })}
-              className="h-8"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="prefix" className="text-xs">CSS Prefix</Label>
-            <Input
-              id="prefix"
-              value={currentProject.prefix}
-              onChange={e => updateFontSettings({ prefix: e.target.value })}
               className="h-8"
             />
           </div>

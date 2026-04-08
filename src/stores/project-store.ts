@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import { v4 as uuid } from 'uuid';
-import { db } from '@/lib/storage/db';
+import {
+  collection, doc, getDocs, setDoc, updateDoc, deleteDoc, query, where, writeBatch,
+} from 'firebase/firestore';
+import { firestore } from '@/lib/firebase';
 import type { Project, FontSettings } from '@/types';
 
 interface ProjectStore {
@@ -28,6 +31,11 @@ const DEFAULT_PROJECT: Omit<Project, 'id' | 'createdAt' | 'updatedAt'> = {
   baselineOffset: 0,
 };
 
+async function fetchProjects(): Promise<Project[]> {
+  const snap = await getDocs(collection(firestore, 'project'));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Project));
+}
+
 export const useProjectStore = create<ProjectStore>((set, get) => ({
   projects: [],
   currentProjectId: null,
@@ -35,7 +43,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   loading: true,
 
   loadProjects: async () => {
-    const projects = await db.projects.toArray();
+    const projects = await fetchProjects();
     if (projects.length === 0) {
       const project = await get().createProject();
       set({ projects: [project], currentProjectId: project.id, currentProject: project, loading: false });
@@ -60,8 +68,9 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       createdAt: now,
       updatedAt: now,
     };
-    await db.projects.add(project);
-    const projects = await db.projects.toArray();
+    const { id, ...data } = project;
+    await setDoc(doc(firestore, 'project', id), data);
+    const projects = await fetchProjects();
     set({ projects, currentProjectId: project.id, currentProject: project });
     localStorage.setItem('currentProjectId', project.id);
     return project;
@@ -76,8 +85,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   },
 
   updateProject: async (id: string, updates: Partial<Project>) => {
-    await db.projects.update(id, { ...updates, updatedAt: Date.now() });
-    const projects = await db.projects.toArray();
+    await updateDoc(doc(firestore, 'project', id), { ...updates, updatedAt: Date.now() });
+    const projects = await fetchProjects();
     const currentProject = projects.find(p => p.id === get().currentProjectId) || null;
     set({ projects, currentProject });
   },
@@ -89,9 +98,20 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   },
 
   deleteProject: async (id: string) => {
-    await db.projects.delete(id);
-    await db.icons.where('projectId').equals(id).delete();
-    const projects = await db.projects.toArray();
+    await deleteDoc(doc(firestore, 'project', id));
+    const iconsSnap = await getDocs(query(collection(firestore, 'icons'), where('parent', '==', id)));
+    if (!iconsSnap.empty) {
+      const iconIds = iconsSnap.docs.map(d => d.id);
+      await fetch('/api/delete-r2-objects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ keys: iconIds.map(iconId => `icons/${id}/${iconId}.svg`) }),
+      });
+      const batch = writeBatch(firestore);
+      iconsSnap.docs.forEach(d => batch.delete(d.ref));
+      await batch.commit();
+    }
+    const projects = await fetchProjects();
     if (projects.length === 0) {
       const project = await get().createProject();
       set({ projects: [project], currentProjectId: project.id, currentProject: project });

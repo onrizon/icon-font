@@ -1,5 +1,8 @@
+'use client';
+
 import { saveAs } from 'file-saver';
-import { db } from '@/lib/storage/db';
+import { collection, doc, getDoc, getDocs, query, where, writeBatch } from 'firebase/firestore';
+import { firestore } from '@/lib/firebase';
 import type { IconGlyph, Project } from '@/types';
 
 interface ProjectExport {
@@ -10,10 +13,17 @@ interface ProjectExport {
 }
 
 export async function exportProject(projectId: string): Promise<void> {
-  const project = await db.projects.get(projectId);
-  if (!project) throw new Error('Project not found');
+  const projectSnap = await getDoc(doc(firestore, 'project', projectId));
+  if (!projectSnap.exists()) throw new Error('Project not found');
+  const project: Project = { id: projectSnap.id, ...projectSnap.data() } as Project;
 
-  const icons = await db.icons.where('projectId').equals(projectId).sortBy('order');
+  const iconsSnap = await getDocs(query(collection(firestore, 'icons'), where('parent', '==', projectId)));
+  const icons: IconGlyph[] = iconsSnap.docs
+    .map(d => {
+      const data = d.data();
+      return { ...data, id: d.id, projectId: data.parent } as IconGlyph;
+    })
+    .sort((a, b) => a.order - b.order);
 
   const data: ProjectExport = {
     version: 1,
@@ -35,7 +45,6 @@ export async function importProject(file: File): Promise<string> {
     throw new Error('Unsupported project file version');
   }
 
-  // Generate new IDs to avoid conflicts
   const { v4: uuid } = await import('uuid');
   const newProjectId = uuid();
   const now = Date.now();
@@ -56,8 +65,14 @@ export async function importProject(file: File): Promise<string> {
     updatedAt: now,
   }));
 
-  await db.projects.add(project);
-  await db.icons.bulkAdd(icons);
+  const { id, ...projectData } = project;
+  const batch = writeBatch(firestore);
+  batch.set(doc(firestore, 'project', id), projectData);
+  for (const icon of icons) {
+    const { id: iconId, projectId: _pid, ...iconData } = icon;
+    batch.set(doc(firestore, 'icons', iconId), { ...iconData, parent: newProjectId });
+  }
+  await batch.commit();
 
   return newProjectId;
 }

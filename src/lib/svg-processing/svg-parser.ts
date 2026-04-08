@@ -46,7 +46,8 @@ function extractPathData(svg: SVGElement): string {
   const pathElements = svg.querySelectorAll('path');
   pathElements.forEach(path => {
     const d = path.getAttribute('d');
-    if (d) paths.push(d);
+    const fill = path.getAttribute('fill');
+    if (d && fill !== 'none' && fill !== 'transparent') paths.push(d);
   });
 
   // Convert basic shapes to paths

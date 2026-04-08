@@ -11,6 +11,7 @@ export interface IconGlyph {
   ligature?: string;
   tags: string[];
   order: number;
+  r2Url?: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -48,9 +49,7 @@ export interface GeneratedFont {
 }
 
 export interface ExportOptions {
-  formats: ('ttf' | 'woff' | 'woff2' | 'svg')[];
-  includeCSS: boolean;
-  includeHTML: boolean;
+  formats: ('ttf' | 'woff2')[];
   prefix: string;
   fontName: string;
 }
