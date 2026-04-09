@@ -1,3 +1,5 @@
+import { generateCSS } from '@/lib/font-generation/css-generator';
+import { generateHTMLDemo } from '@/lib/font-generation/html-demo-generator';
 import { generateFont } from '@/lib/font-generation/opentype-generator';
 import { compressWoff2 } from '@/lib/font-generation/woff2';
 import type { IconGlyph, Project } from '@/types';
@@ -7,11 +9,15 @@ import JSZip from 'jszip';
 export interface PackageOptions {
   includeTTF: boolean;
   includeWOFF2: boolean;
+  includeCSS: boolean;
+  includeHTML: boolean;
 }
 
 const DEFAULT_OPTIONS: PackageOptions = {
   includeTTF: true,
   includeWOFF2: true,
+  includeCSS: true,
+  includeHTML: true,
 };
 
 export async function downloadFontPackage(
@@ -22,7 +28,9 @@ export async function downloadFontPackage(
   const opts = { ...DEFAULT_OPTIONS, ...options };
   const { fontFamily } = project;
 
-  const { ttfBuffer } = generateFont(icons, project);
+  const { ttfBuffer, codepointMap } = generateFont(icons, project);
+  const css = generateCSS(icons, project, codepointMap);
+  const html = generateHTMLDemo(icons, project, codepointMap, css);
 
   const zip = new JSZip();
   const folder = zip.folder(fontFamily)!;
@@ -41,6 +49,14 @@ export async function downloadFontPackage(
     }
   }
 
+  if (opts.includeCSS) {
+    folder.file(`${fontFamily}.css`, css);
+  }
+
+  if (opts.includeHTML) {
+    folder.file('demo.html', html);
+  }
+
   // Include SVG source files
   const svgFolder = folder.folder('svg')!;
   for (const icon of icons) {
@@ -54,10 +70,10 @@ export async function downloadFontPackage(
 export async function downloadSingleFormat(
   icons: IconGlyph[],
   project: Project,
-  format: 'ttf' | 'woff2'
+  format: 'ttf' | 'woff' | 'woff2' | 'css'
 ): Promise<void> {
   const { fontFamily } = project;
-  const { ttfBuffer } = generateFont(icons, project);
+  const { ttfBuffer, codepointMap } = generateFont(icons, project);
 
   switch (format) {
     case 'ttf': {
@@ -69,6 +85,12 @@ export async function downloadSingleFormat(
       const woff2Buffer = await compressWoff2(ttfBuffer);
       const blob = new Blob([woff2Buffer], { type: 'font/woff2' });
       saveAs(blob, `${fontFamily}.woff2`);
+      break;
+    }
+    case 'css': {
+      const css = generateCSS(icons, project, codepointMap);
+      const blob = new Blob([css], { type: 'text/css' });
+      saveAs(blob, `${fontFamily}.css`);
       break;
     }
   }

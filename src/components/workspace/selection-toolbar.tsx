@@ -1,14 +1,25 @@
 'use client';
 
+import { useState } from 'react';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useIconStore } from '@/stores/icon-store';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
 import { Trash2, Edit, CheckSquare, XSquare } from 'lucide-react';
 
 export function SelectionToolbar() {
   const { selectedIds, clearSelection, selectAll, setEditingIconId } = useWorkspaceStore();
   const icons = useIconStore(s => s.icons);
   const deleteIcons = useIconStore(s => s.deleteIcons);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const count = selectedIds.size;
   if (count === 0) return null;
@@ -16,6 +27,7 @@ export function SelectionToolbar() {
   const handleDelete = async () => {
     await deleteIcons(Array.from(selectedIds));
     clearSelection();
+    setConfirmOpen(false);
   };
 
   const handleEdit = () => {
@@ -46,11 +58,28 @@ export function SelectionToolbar() {
             Edit
           </Button>
         )}
-        <Button variant="ghost" size="sm" onClick={handleDelete} className="text-destructive hover:text-destructive">
+        <Button variant="ghost" size="sm" onClick={() => setConfirmOpen(true)} className="text-destructive hover:text-destructive">
           <Trash2 className="h-4 w-4 mr-1" />
           Delete
         </Button>
       </div>
+
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Delete icons?</DialogTitle>
+            <DialogDescription>
+              This will permanently delete {count} icon{count !== 1 ? 's' : ''}. This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

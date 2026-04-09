@@ -24,6 +24,19 @@ export function useIconImport(projectId: string | null) {
       for (const file of files) {
         try {
           const raw = await file.text();
+
+          // Preserve original SVG structure for display — only strip fixed width/height
+          // so it scales correctly inside the CSS-sized icon card container.
+          // svgContent is never read by font generation (which uses pathData + viewBox).
+          const rawDoc = new DOMParser().parseFromString(raw, 'image/svg+xml');
+          const rawSvgEl = rawDoc.querySelector('svg');
+          if (rawSvgEl) {
+            rawSvgEl.removeAttribute('width');
+            rawSvgEl.removeAttribute('height');
+          }
+          const displaySvg = new XMLSerializer().serializeToString(rawDoc.documentElement);
+
+          // Still run the full pipeline to extract pathData/viewBox for font generation
           const optimized = optimizeSvg(raw);
           const parsed = parseSvg(optimized, file.name);
           const normalized = normalizeSvg(parsed);
@@ -41,7 +54,7 @@ export function useIconImport(projectId: string | null) {
             id: iconId,
             projectId,
             name,
-            svgContent: normalized.svgContent,
+            svgContent: displaySvg,
             pathData: normalized.pathData,
             viewBox: normalized.viewBox,
             width: normalized.width,

@@ -1,11 +1,15 @@
 'use client';
 
+import { generateCSS } from '@/lib/font-generation/css-generator';
+import { generateHTMLDemo } from '@/lib/font-generation/html-demo-generator';
 import { generateFont, type GeneratedFontData } from '@/lib/font-generation/opentype-generator';
 import type { IconGlyph, Project } from '@/types';
 import { useCallback, useState } from 'react';
 
 export interface FontGenerationResult {
   fontData: GeneratedFontData;
+  css: string;
+  html: string;
 }
 
 export function useFontGeneration() {
@@ -25,8 +29,10 @@ export function useFontGeneration() {
 
       try {
         const fontData = generateFont(icons, project);
+        const css = generateCSS(icons, project, fontData.codepointMap);
+        const html = generateHTMLDemo(icons, project, fontData.codepointMap, css);
 
-        const res: FontGenerationResult = { fontData };
+        const res: FontGenerationResult = { fontData, css, html };
         setResult(res);
         setGenerating(false);
         return res;
