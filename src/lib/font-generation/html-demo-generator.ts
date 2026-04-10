@@ -31,7 +31,7 @@ export function generateHTMLDemo(
 ${cssContent}
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: Arial, sans-serif;
       margin: 0;
       padding: 2rem;
       background: #f5f5f5;
@@ -62,12 +62,14 @@ ${cssContent}
     }
     .icon-name {
       display: block;
+      font-family: Arial, sans-serif !important;
       font-size: 0.75rem;
       color: #666;
       word-break: break-all;
     }
     .icon-code {
       display: block;
+      font-family: Arial, sans-serif !important;
       font-size: 0.65rem;
       color: #999;
       margin-top: 0.25rem;

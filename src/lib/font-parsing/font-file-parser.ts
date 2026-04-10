@@ -1,4 +1,4 @@
-import opentype from 'opentype.js';
+import opentype, { type BoundingBox } from 'opentype.js';
 import { SVGPathData, encodeSVGPath } from 'svg-pathdata';
 import { isWoff2, decompressWoff2 } from '@/lib/font-generation/woff2';
 
@@ -83,6 +83,7 @@ function reverseTransformAndFit(
   rawPathData: string,
   ascender: number,
   scale: number,
+  glyphBBox?: BoundingBox,
 ): { pathData: string; viewBox: string; width: number; height: number; svgContent: string } | null {
   try {
     const reversed = new SVGPathData(rawPathData)
@@ -91,14 +92,28 @@ function reverseTransformAndFit(
       .translate(0, ascender)
       .scale(1 / scale, 1 / scale);
 
-    const bounds = computePathBounds(reversed.commands as Array<Record<string, unknown>>);
+    // Prefer the glyph's own bounding box (exact bezier extremes) over the
+    // control-point approximation. Control points can extend outside the actual
+    // curve, so computePathBounds over-estimates bounds for complex glyphs
+    // (e.g. Discord), making the icon appear smaller after regeneration.
+    let bounds: Bounds | null;
+    if (glyphBBox) {
+      // Transform font-space bbox (Y-up) to SVG space (Y-down) with scale applied
+      bounds = {
+        minX: glyphBBox.x1 / scale,
+        maxX: glyphBBox.x2 / scale,
+        minY: ascender - glyphBBox.y2 / scale,
+        maxY: ascender - glyphBBox.y1 / scale,
+      };
+    } else {
+      bounds = computePathBounds(reversed.commands as Array<Record<string, unknown>>);
+    }
     if (!bounds) return null;
 
     const contentW = bounds.maxX - bounds.minX;
     const contentH = bounds.maxY - bounds.minY;
     const contentSize = Math.max(contentW, contentH, 1);
-    const padding = contentSize * 0.05;
-    const vbSize = Math.round(contentSize + padding * 2);
+    const vbSize = Math.round(contentSize);
 
     // Translate so content is centered in a 0-origin square viewBox
     const offsetX = (vbSize - contentW) / 2 - bounds.minX;
@@ -112,7 +127,8 @@ function reverseTransformAndFit(
     const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}"><path d="${pathData}"/></svg>`;
 
     return { pathData, viewBox, width: vbSize, height: vbSize, svgContent };
-  } catch {
+  } catch (e) {
+    console.warn('[font-import] reverseTransformAndFit threw:', e);
     return null;
   }
 }
@@ -122,7 +138,11 @@ function parseBinaryFont(buffer: ArrayBuffer): ParsedFontFile {
 
   const fontFamily = font.familyName || 'imported-font';
   const { unitsPerEm, ascender, descender } = font;
-  const scale = unitsPerEm / 1024;
+  // Use scale=1: treat font units directly. The forward transform in svg-to-glyph.ts
+  // uses unitsPerEm/viewBoxSize, but for externally-created fonts that scale is unknown.
+  // scale=1 means reverseTransformAndFit only applies the Y-flip (scale(1,-1) + translate(0,ascender)),
+  // which is correct for any font regardless of origin.
+  const scale = 1;
   const glyphs: ParsedGlyph[] = [];
 
   for (let i = 0; i < font.glyphs.length; i++) {
@@ -133,10 +153,16 @@ function parseBinaryFont(buffer: ArrayBuffer): ParsedFontFile {
     if (!unicode || unicode === 0) continue;
 
     const rawPathData = glyph.path.toPathData(2);
-    if (!rawPathData?.trim()) continue;
+    if (!rawPathData?.trim()) {
+      console.warn(`[font-import] Skipping U+${unicode.toString(16).toUpperCase()} "${glyph.name}" — no path data`);
+      continue;
+    }
 
-    const result = reverseTransformAndFit(rawPathData, ascender, scale);
-    if (!result) continue;
+    const result = reverseTransformAndFit(rawPathData, ascender, scale, glyph.path.getBoundingBox());
+    if (!result) {
+      console.warn(`[font-import] Skipping U+${unicode.toString(16).toUpperCase()} "${glyph.name}" — transform failed`);
+      continue;
+    }
 
     const name = glyphNameToIconName({ name: glyph.name, unicode });
     glyphs.push({ name, unicode, ...result });
@@ -166,7 +192,7 @@ function parseSvgFont(text: string): ParsedFontFile {
   const unitsPerEm = parseInt(fontFace.getAttribute('units-per-em') || '1000', 10);
   const ascender = parseInt(fontFace.getAttribute('ascent') || String(unitsPerEm), 10);
   const descender = parseInt(fontFace.getAttribute('descent') || '0', 10);
-  const scale = unitsPerEm / 1024;
+  const scale = 1;
 
   const glyphEls = doc.querySelectorAll('glyph');
   const glyphs: ParsedGlyph[] = [];
@@ -188,7 +214,10 @@ function parseSvgFont(text: string): ParsedFontFile {
 
     // SVG fonts use Y-up coordinate system, same reverse transform as TTF
     const result = reverseTransformAndFit(d, ascender, scale);
-    if (!result) continue;
+    if (!result) {
+      console.warn(`[font-import] Skipping U+${codePoint.toString(16).toUpperCase()} "${glyphName}" — transform failed`);
+      continue;
+    }
 
     const name = glyphNameToIconName({ name: glyphName, unicode: codePoint });
     glyphs.push({ name, unicode: codePoint, ...result });

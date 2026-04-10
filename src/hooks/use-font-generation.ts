@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import type { IconGlyph, Project } from '@/types';
-import { generateFont, type GeneratedFontData } from '@/lib/font-generation/opentype-generator';
 import { generateCSS } from '@/lib/font-generation/css-generator';
 import { generateHTMLDemo } from '@/lib/font-generation/html-demo-generator';
+import { generateFont, type GeneratedFontData } from '@/lib/font-generation/opentype-generator';
+import type { IconGlyph, Project } from '@/types';
+import { useCallback, useState } from 'react';
 
 export interface FontGenerationResult {
   fontData: GeneratedFontData;

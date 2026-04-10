@@ -42,16 +42,28 @@ export function parseSvg(svgString: string, fileName: string): ParsedSvg {
 function extractPathData(svg: SVGElement): string {
   const paths: string[] = [];
 
+  // Elements inside these containers are definitions or non-rendering contexts —
+  // querySelectorAll finds them but they must not be included in the glyph path.
+  // e.g. <clipPath><rect/></clipPath> gets convertShapeToPath'd to a <path> by
+  // SVGO before this runs, and would otherwise appear as a filled square.
+  const isInNonRenderingContext = (el: Element) =>
+    !!el.closest('defs, mask, clipPath, symbol');
+
   // Get all path elements
   const pathElements = svg.querySelectorAll('path');
   pathElements.forEach(path => {
+    if (isInNonRenderingContext(path)) return;
     const d = path.getAttribute('d');
-    if (d) paths.push(d);
+    const fill = path.getAttribute('fill');
+    if (d && fill !== 'none' && fill !== 'transparent') paths.push(d);
   });
 
   // Convert basic shapes to paths
   const rects = svg.querySelectorAll('rect');
   rects.forEach(rect => {
+    if (isInNonRenderingContext(rect)) return;
+    const fill = rect.getAttribute('fill');
+    if (fill === 'none' || fill === 'transparent') return;
     const x = parseFloat(rect.getAttribute('x') || '0');
     const y = parseFloat(rect.getAttribute('y') || '0');
     const w = parseFloat(rect.getAttribute('width') || '0');
@@ -70,6 +82,9 @@ function extractPathData(svg: SVGElement): string {
 
   const circles = svg.querySelectorAll('circle');
   circles.forEach(circle => {
+    if (isInNonRenderingContext(circle)) return;
+    const fill = circle.getAttribute('fill');
+    if (fill === 'none' || fill === 'transparent') return;
     const cx = parseFloat(circle.getAttribute('cx') || '0');
     const cy = parseFloat(circle.getAttribute('cy') || '0');
     const r = parseFloat(circle.getAttribute('r') || '0');
@@ -80,6 +95,9 @@ function extractPathData(svg: SVGElement): string {
 
   const ellipses = svg.querySelectorAll('ellipse');
   ellipses.forEach(ellipse => {
+    if (isInNonRenderingContext(ellipse)) return;
+    const fill = ellipse.getAttribute('fill');
+    if (fill === 'none' || fill === 'transparent') return;
     const cx = parseFloat(ellipse.getAttribute('cx') || '0');
     const cy = parseFloat(ellipse.getAttribute('cy') || '0');
     const rx = parseFloat(ellipse.getAttribute('rx') || '0');
@@ -91,6 +109,9 @@ function extractPathData(svg: SVGElement): string {
 
   const polygons = svg.querySelectorAll('polygon');
   polygons.forEach(polygon => {
+    if (isInNonRenderingContext(polygon)) return;
+    const fill = polygon.getAttribute('fill');
+    if (fill === 'none' || fill === 'transparent') return;
     const points = polygon.getAttribute('points')?.trim();
     if (points) {
       const coords = points.split(/[\s,]+/).map(Number);
@@ -105,6 +126,7 @@ function extractPathData(svg: SVGElement): string {
 
   const polylines = svg.querySelectorAll('polyline');
   polylines.forEach(polyline => {
+    if (isInNonRenderingContext(polyline)) return;
     const points = polyline.getAttribute('points')?.trim();
     if (points) {
       const coords = points.split(/[\s,]+/).map(Number);
@@ -118,6 +140,7 @@ function extractPathData(svg: SVGElement): string {
 
   const lines = svg.querySelectorAll('line');
   lines.forEach(line => {
+    if (isInNonRenderingContext(line)) return;
     const x1 = line.getAttribute('x1') || '0';
     const y1 = line.getAttribute('y1') || '0';
     const x2 = line.getAttribute('x2') || '0';

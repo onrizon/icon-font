@@ -19,25 +19,48 @@ export function useIconImport(projectId: string | null) {
       setErrors([]);
 
       const importErrors: string[] = [];
-      const iconsToAdd: Omit<IconGlyph, 'id' | 'order' | 'createdAt' | 'updatedAt'>[] = [];
+      const iconsToAdd: (Omit<IconGlyph, 'id' | 'order' | 'createdAt' | 'updatedAt'> & { id?: string })[] = [];
 
       for (const file of files) {
         try {
           const raw = await file.text();
+
+          // Preserve original SVG structure for display — only strip fixed width/height
+          // so it scales correctly inside the CSS-sized icon card container.
+          // svgContent is never read by font generation (which uses pathData + viewBox).
+          const rawDoc = new DOMParser().parseFromString(raw, 'image/svg+xml');
+          const rawSvgEl = rawDoc.querySelector('svg');
+          if (rawSvgEl) {
+            rawSvgEl.removeAttribute('width');
+            rawSvgEl.removeAttribute('height');
+          }
+          const displaySvg = new XMLSerializer().serializeToString(rawDoc.documentElement);
+
+          // Still run the full pipeline to extract pathData/viewBox for font generation
           const optimized = optimizeSvg(raw);
           const parsed = parseSvg(optimized, file.name);
           const normalized = normalizeSvg(parsed);
           const name = fileNameToIconName(file.name);
+          const iconId = crypto.randomUUID();
+
+          const formData = new FormData();
+          formData.append('file', new Blob([optimized], { type: 'image/svg+xml' }), file.name);
+          formData.append('projectId', projectId);
+          formData.append('iconId', iconId);
+          const uploadRes = await fetch('/api/upload-svg', { method: 'POST', body: formData });
+          const { url: r2Url } = await uploadRes.json();
 
           iconsToAdd.push({
+            id: iconId,
             projectId,
             name,
-            svgContent: normalized.svgContent,
+            svgContent: displaySvg,
             pathData: normalized.pathData,
             viewBox: normalized.viewBox,
             width: normalized.width,
             height: normalized.height,
             tags: [],
+            r2Url,
           });
         } catch (err) {
           importErrors.push(`${file.name}: ${err instanceof Error ? err.message : 'Unknown error'}`);

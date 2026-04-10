@@ -1,19 +1,19 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { CssPreview } from '@/components/preview/css-preview';
+import { FontPreview } from '@/components/preview/font-preview';
+import { UsageExamples } from '@/components/preview/usage-examples';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Download, Package, Loader2 } from 'lucide-react';
+import { useFontGeneration } from '@/hooks/use-font-generation';
+import { downloadFontPackage, downloadSingleFormat } from '@/lib/export/zip-packager';
 import { useIconStore } from '@/stores/icon-store';
 import { useProjectStore } from '@/stores/project-store';
-import { useFontGeneration, type FontGenerationResult } from '@/hooks/use-font-generation';
-import { downloadFontPackage, downloadSingleFormat } from '@/lib/export/zip-packager';
-import { FontPreview } from '@/components/preview/font-preview';
-import { CssPreview } from '@/components/preview/css-preview';
-import { UsageExamples } from '@/components/preview/usage-examples';
+import { Download, Loader2, Package } from 'lucide-react';
+import { useCallback, useState } from 'react';
 
 export function GeneratePanel() {
   const icons = useIconStore(s => s.icons);
@@ -21,7 +21,6 @@ export function GeneratePanel() {
   const { generate, generating, result, error } = useFontGeneration();
 
   const [includeTTF, setIncludeTTF] = useState(true);
-  const [includeWOFF, setIncludeWOFF] = useState(true);
   const [includeWOFF2, setIncludeWOFF2] = useState(true);
   const [includeCSS, setIncludeCSS] = useState(true);
   const [includeHTML, setIncludeHTML] = useState(true);
@@ -39,7 +38,6 @@ export function GeneratePanel() {
     try {
       await downloadFontPackage(icons, project, {
         includeTTF,
-        includeWOFF,
         includeWOFF2,
         includeCSS,
         includeHTML,
@@ -47,10 +45,10 @@ export function GeneratePanel() {
     } catch (err) {
       setDownloadError(err instanceof Error ? err.message : 'Download failed');
     }
-  }, [icons, project, includeTTF, includeWOFF, includeWOFF2, includeCSS, includeHTML]);
+  }, [icons, project, includeTTF, includeWOFF2, includeCSS, includeHTML]);
 
   const handleDownloadFormat = useCallback(
-    async (format: 'ttf' | 'woff' | 'woff2' | 'css') => {
+    async (format: 'ttf' | 'woff2' | 'css') => {
       if (!project) return;
       setDownloadError(null);
       try {
@@ -94,10 +92,6 @@ export function GeneratePanel() {
               <Label htmlFor="ttf" className="text-sm">TTF</Label>
             </div>
             <div className="flex items-center gap-2">
-              <Switch id="woff" checked={includeWOFF} onCheckedChange={setIncludeWOFF} />
-              <Label htmlFor="woff" className="text-sm">WOFF</Label>
-            </div>
-            <div className="flex items-center gap-2">
               <Switch id="woff2" checked={includeWOFF2} onCheckedChange={setIncludeWOFF2} />
               <Label htmlFor="woff2" className="text-sm">WOFF2</Label>
             </div>
@@ -122,9 +116,6 @@ export function GeneratePanel() {
               </Button>
               <Button variant="outline" size="sm" onClick={() => handleDownloadFormat('ttf')}>
                 TTF
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => handleDownloadFormat('woff')}>
-                WOFF
               </Button>
               <Button variant="outline" size="sm" onClick={() => handleDownloadFormat('woff2')}>
                 WOFF2

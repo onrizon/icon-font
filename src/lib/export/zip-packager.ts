@@ -1,25 +1,21 @@
-import JSZip from 'jszip';
-import { saveAs } from 'file-saver';
-import type { IconGlyph, Project } from '@/types';
-import { generateFont } from '@/lib/font-generation/opentype-generator';
 import { generateCSS } from '@/lib/font-generation/css-generator';
 import { generateHTMLDemo } from '@/lib/font-generation/html-demo-generator';
+import { generateFont } from '@/lib/font-generation/opentype-generator';
 import { compressWoff2 } from '@/lib/font-generation/woff2';
+import type { IconGlyph, Project } from '@/types';
+import { saveAs } from 'file-saver';
+import JSZip from 'jszip';
 
 export interface PackageOptions {
   includeTTF: boolean;
-  includeWOFF: boolean;
   includeWOFF2: boolean;
-  includeSVGFont: boolean;
   includeCSS: boolean;
   includeHTML: boolean;
 }
 
 const DEFAULT_OPTIONS: PackageOptions = {
   includeTTF: true,
-  includeWOFF: true,
   includeWOFF2: true,
-  includeSVGFont: false,
   includeCSS: true,
   includeHTML: true,
 };
@@ -42,10 +38,6 @@ export async function downloadFontPackage(
 
   if (opts.includeTTF) {
     fontsFolder.file(`${fontFamily}.ttf`, ttfBuffer);
-  }
-
-  if (opts.includeWOFF) {
-    fontsFolder.file(`${fontFamily}.woff`, ttfBuffer);
   }
 
   if (opts.includeWOFF2) {
@@ -87,11 +79,6 @@ export async function downloadSingleFormat(
     case 'ttf': {
       const blob = new Blob([ttfBuffer], { type: 'font/ttf' });
       saveAs(blob, `${fontFamily}.ttf`);
-      break;
-    }
-    case 'woff': {
-      const blob = new Blob([ttfBuffer], { type: 'font/woff' });
-      saveAs(blob, `${fontFamily}.woff`);
       break;
     }
     case 'woff2': {
