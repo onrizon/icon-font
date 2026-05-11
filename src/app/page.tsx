@@ -1,117 +1,22 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useProjectStore } from '@/stores/project-store';
-import { useIconStore } from '@/stores/icon-store';
-import { useWorkspaceStore } from '@/stores/workspace-store';
-import { useIconImport } from '@/hooks/use-icon-import';
-import { Header } from '@/components/layout/header';
-import { Sidebar } from '@/components/layout/sidebar';
-import { BottomBar } from '@/components/layout/bottom-bar';
-import { IconGrid } from '@/components/workspace/icon-grid';
-import { SearchToolbar } from '@/components/workspace/search-toolbar';
-import { SelectionToolbar } from '@/components/workspace/selection-toolbar';
-import { SvgDropzone } from '@/components/import/svg-dropzone';
-import { IconEditor } from '@/components/editor/icon-editor';
-import { GeneratePanel } from '@/components/generate/generate-panel';
-import { ProjectSettings } from '@/components/project/project-settings';
+import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-
-function WorkspaceContent() {
-  const activeTab = useWorkspaceStore(s => s.activeTab);
-  const icons = useIconStore(s => s.icons);
-  const currentProjectId = useProjectStore(s => s.currentProjectId);
-  const { importSvgFiles, importing } = useIconImport(currentProjectId);
-  const selectedIds = useWorkspaceStore(s => s.selectedIds);
-  const clearSelection = useWorkspaceStore(s => s.clearSelection);
-  const deleteIcons = useIconStore(s => s.deleteIcons);
-  const selectAll = useWorkspaceStore(s => s.selectAll);
-
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'a' && activeTab === 'icons') {
-        e.preventDefault();
-        selectAll(icons.map(i => i.id));
-      }
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIds.size > 0 && activeTab === 'icons') {
-        if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') return;
-        e.preventDefault();
-        deleteIcons(Array.from(selectedIds));
-        clearSelection();
-      }
-      if (e.key === 'Escape') {
-        clearSelection();
-      }
-    };
-
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [activeTab, icons, selectedIds, selectAll, deleteIcons, clearSelection]);
-
-  switch (activeTab) {
-    case 'editor':
-      return <IconEditor />;
-    case 'generate':
-      return <GeneratePanel />;
-    case 'preview':
-      return <ProjectSettings />;
-    default:
-      return (
-        <div className="flex flex-col h-full">
-          <SearchToolbar />
-          <SelectionToolbar />
-          <div className="flex-1 overflow-auto">
-            {icons.length === 0 ? (
-              <div className="flex items-center justify-center h-full p-8">
-                <SvgDropzone onFilesAccepted={importSvgFiles} importing={importing} />
-              </div>
-            ) : (
-              <>
-                <div className="px-4 pt-2">
-                  <SvgDropzone onFilesAccepted={importSvgFiles} importing={importing} compact />
-                </div>
-                <IconGrid />
-              </>
-            )}
-          </div>
-        </div>
-      );
-  }
-}
+import { useAuth } from '@/hooks/use-auth';
 
 export default function Home() {
-  const { loading, currentProjectId, loadProjects } = useProjectStore();
-  const loadIcons = useIconStore(s => s.loadIcons);
+  const router = useRouter();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
-    loadProjects();
-  }, [loadProjects]);
-
-  useEffect(() => {
-    if (currentProjectId) {
-      loadIcons(currentProjectId);
-    }
-  }, [currentProjectId, loadIcons]);
-
-  if (loading) {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+    if (loading) return;
+    router.replace(user ? '/projects' : '/login');
+  }, [user, loading, router]);
 
   return (
-    <div className="h-screen flex flex-col">
-      <Header />
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
-        <main className="flex-1 overflow-hidden">
-          <WorkspaceContent />
-        </main>
-      </div>
-      <BottomBar />
+    <div className="h-screen flex items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
     </div>
   );
 }

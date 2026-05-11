@@ -8,6 +8,8 @@ interface WorkspaceStore {
   activeTab: EditorTab;
   editingIconId: string | null;
   sidebarOpen: boolean;
+  showGrid: boolean;
+  gridSize: number;
 
   select: (id: string) => void;
   toggleSelect: (id: string) => void;
@@ -18,6 +20,8 @@ interface WorkspaceStore {
   setActiveTab: (tab: EditorTab) => void;
   setEditingIconId: (id: string | null) => void;
   setSidebarOpen: (open: boolean) => void;
+  setShowGrid: (show: boolean) => void;
+  setGridSize: (size: number) => void;
 }
 
 export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
@@ -27,6 +31,8 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   activeTab: 'icons',
   editingIconId: null,
   sidebarOpen: true,
+  showGrid: false,
+  gridSize: 16,
 
   select: (id) => set({ selectedIds: new Set([id]), lastSelectedId: id }),
 
@@ -71,4 +77,8 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   setEditingIconId: (id) => set({ editingIconId: id, activeTab: id ? 'editor' : 'icons' }),
 
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
+
+  setShowGrid: (show) => set({ showGrid: show }),
+
+  setGridSize: (size) => set({ gridSize: Math.max(2, Math.min(64, Math.round(size))) }),
 }));

@@ -45,18 +45,17 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   loadProjects: async () => {
     const projects = await fetchProjects();
     if (projects.length === 0) {
-      const project = await get().createProject();
-      set({ projects: [project], currentProjectId: project.id, currentProject: project, loading: false });
-    } else {
-      const savedId = localStorage.getItem('currentProjectId');
-      const currentId = savedId && projects.find(p => p.id === savedId) ? savedId : projects[0].id;
-      set({
-        projects,
-        currentProjectId: currentId,
-        currentProject: projects.find(p => p.id === currentId) || projects[0],
-        loading: false,
-      });
+      set({ projects: [], currentProjectId: null, currentProject: null, loading: false });
+      return;
     }
+    const savedId = localStorage.getItem('currentProjectId');
+    const currentId = savedId && projects.find(p => p.id === savedId) ? savedId : null;
+    set({
+      projects,
+      currentProjectId: currentId,
+      currentProject: currentId ? projects.find(p => p.id === currentId) || null : null,
+      loading: false,
+    });
   },
 
   createProject: async (name?: string) => {
@@ -112,12 +111,9 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       await batch.commit();
     }
     const projects = await fetchProjects();
-    if (projects.length === 0) {
-      const project = await get().createProject();
-      set({ projects: [project], currentProjectId: project.id, currentProject: project });
-    } else if (get().currentProjectId === id) {
-      set({ projects, currentProjectId: projects[0].id, currentProject: projects[0] });
-      localStorage.setItem('currentProjectId', projects[0].id);
+    if (get().currentProjectId === id) {
+      localStorage.removeItem('currentProjectId');
+      set({ projects, currentProjectId: null, currentProject: null });
     } else {
       set({ projects });
     }
