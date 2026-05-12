@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import type { IconGlyph } from '@/types';
 import { formatCodepoint } from '@/lib/font-generation/codepoint-allocator';
+import { PUA_START, PUA_END } from '@/lib/font-generation/constants';
 
 interface IconPropertiesProps {
   icon: IconGlyph;
@@ -32,7 +33,7 @@ export function IconProperties({ icon, onUpdate }: IconPropertiesProps) {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const hex = e.target.value.replace(/[^0-9a-fA-F]/g, '');
       const value = parseInt(hex, 16);
-      if (!isNaN(value) && value >= 0xe000 && value <= 0xf8ff) {
+      if (!isNaN(value) && value >= PUA_START && value <= PUA_END) {
         onUpdate({ unicode: value });
       }
     },

@@ -18,6 +18,7 @@ export interface IconGlyph {
 
 export interface Project {
   id: string;
+  ownerUid: string;
   name: string;
   fontName: string;
   fontFamily: string;
@@ -26,6 +27,7 @@ export interface Project {
   ascender: number;
   descender: number;
   baselineOffset: number;
+  iconCount: number;
   createdAt: number;
   updatedAt: number;
 }
@@ -41,7 +43,6 @@ export interface FontSettings {
 
 export interface GeneratedFont {
   ttf: ArrayBuffer;
-  woff: ArrayBuffer;
   woff2: ArrayBuffer;
   svg: string;
   css: string;

@@ -2,9 +2,11 @@
 
 import { useCallback, useState } from 'react';
 import { useIconStore } from '@/stores/icon-store';
+import { getIdToken } from '@/hooks/use-auth';
 import { optimizeSvg } from '@/lib/svg-processing/svg-optimizer';
 import { parseSvg, fileNameToIconName } from '@/lib/svg-processing/svg-parser';
 import { normalizeSvg } from '@/lib/svg-processing/svg-normalizer';
+import { AUTO_IMPORT_START, PUA_END } from '@/lib/font-generation/constants';
 import type { IconGlyph } from '@/types';
 
 export function useIconImport(projectId: string | null) {
@@ -20,6 +22,22 @@ export function useIconImport(projectId: string | null) {
 
       const importErrors: string[] = [];
       const iconsToAdd: (Omit<IconGlyph, 'id' | 'order' | 'createdAt' | 'updatedAt'> & { id?: string })[] = [];
+
+      const used = new Set<number>(
+        useIconStore
+          .getState()
+          .icons.map(i => i.unicode)
+          .filter((u): u is number => typeof u === 'number')
+      );
+      let nextCp = AUTO_IMPORT_START;
+      const allocateNextCodepoint = (): number => {
+        while (used.has(nextCp)) nextCp++;
+        if (nextCp > PUA_END) throw new Error(`Exceeded Private Use Area capacity (U+${AUTO_IMPORT_START.toString(16).toUpperCase()}–U+${PUA_END.toString(16).toUpperCase()})`);
+        const cp = nextCp;
+        used.add(cp);
+        nextCp++;
+        return cp;
+      };
 
       for (const file of files) {
         try {
@@ -47,7 +65,15 @@ export function useIconImport(projectId: string | null) {
           formData.append('file', new Blob([optimized], { type: 'image/svg+xml' }), file.name);
           formData.append('projectId', projectId);
           formData.append('iconId', iconId);
-          const uploadRes = await fetch('/api/upload-svg', { method: 'POST', body: formData });
+          const token = await getIdToken();
+          const uploadRes = await fetch('/api/upload-svg', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+            body: formData,
+          });
+          if (!uploadRes.ok) {
+            throw new Error(`Upload failed: ${uploadRes.status}`);
+          }
           const { url: r2Url } = await uploadRes.json();
 
           iconsToAdd.push({
@@ -61,6 +87,7 @@ export function useIconImport(projectId: string | null) {
             height: normalized.height,
             tags: [],
             r2Url,
+            unicode: allocateNextCodepoint(),
           });
         } catch (err) {
           importErrors.push(`${file.name}: ${err instanceof Error ? err.message : 'Unknown error'}`);

@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {};
+const nextConfig: NextConfig = {
+  serverExternalPackages: ['firebase-admin', '@google-cloud/firestore'],
+};
 
 export default nextConfig;

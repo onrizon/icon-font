@@ -9,8 +9,13 @@ export interface ParsedSvg {
 export function parseSvg(svgString: string, fileName: string): ParsedSvg {
   const parser = new DOMParser();
   const doc = parser.parseFromString(svgString, 'image/svg+xml');
-  const svg = doc.querySelector('svg');
 
+  const parserError = doc.querySelector('parsererror');
+  if (parserError) {
+    throw new Error(`Malformed SVG in ${fileName}: ${parserError.textContent?.trim() ?? 'parse error'}`);
+  }
+
+  const svg = doc.querySelector('svg');
   if (!svg) {
     throw new Error(`Invalid SVG file: ${fileName}`);
   }
@@ -151,11 +156,14 @@ function extractPathData(svg: SVGElement): string {
   return paths.join(' ');
 }
 
-export function fileNameToIconName(fileName: string): string {
-  return fileName
-    .replace(/\.svg$/i, '')
+export function sanitizeIconName(name: string): string {
+  return name
     .replace(/[^a-zA-Z0-9-_]/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
     .toLowerCase();
+}
+
+export function fileNameToIconName(fileName: string): string {
+  return sanitizeIconName(fileName.replace(/\.svg$/i, ''));
 }

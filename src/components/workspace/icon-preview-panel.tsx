@@ -2,13 +2,111 @@
 
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
 import { useIconStore } from '@/stores/icon-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
-import { useMemo } from 'react';
+import { formatCodepoint } from '@/lib/font-generation/codepoint-allocator';
+import { PUA_START, PUA_END } from '@/lib/font-generation/constants';
+import { sanitizeIconName } from '@/lib/svg-processing/svg-parser';
+import { useMemo, useState } from 'react';
+import type { IconGlyph } from '@/types';
 
 function formatBytes(n: number): string {
   if (n < 1024) return `${n} B`;
   return `${(n / 1024).toFixed(1)} KB`;
+}
+
+function NameField({ icon, allIcons }: { icon: IconGlyph; allIcons: IconGlyph[] }) {
+  const updateIcon = useIconStore(s => s.updateIcon);
+  const [value, setValue] = useState(icon.name);
+  const [error, setError] = useState<string | null>(null);
+
+  const commit = async () => {
+    const sanitized = sanitizeIconName(value.trim());
+    if (!sanitized) {
+      setError('Name is required');
+      return;
+    }
+    const collision = allIcons.find(i => i.id !== icon.id && i.name === sanitized);
+    if (collision) {
+      setError('Another icon already has this name');
+      return;
+    }
+    setError(null);
+    if (sanitized !== value) setValue(sanitized);
+    if (sanitized === icon.name) return;
+    await updateIcon(icon.id, { name: sanitized });
+  };
+
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs" htmlFor="name-input">Name</Label>
+      <Input
+        id="name-input"
+        value={value}
+        onChange={e => setValue(e.target.value)}
+        onBlur={commit}
+        onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+        className="h-8 text-sm"
+      />
+      {error && (
+        <p className="text-[11px] text-destructive">{error}</p>
+      )}
+    </div>
+  );
+}
+
+function UnicodeField({ icon, allIcons }: { icon: IconGlyph; allIcons: IconGlyph[] }) {
+  const updateIcon = useIconStore(s => s.updateIcon);
+  const [value, setValue] = useState(icon.unicode ? formatCodepoint(icon.unicode) : '');
+  const [error, setError] = useState<string | null>(null);
+
+  const commit = async () => {
+    const trimmed = value.trim().replace(/^U\+/i, '');
+    if (!trimmed) {
+      setError(null);
+      return;
+    }
+    if (!/^[0-9a-fA-F]{1,6}$/.test(trimmed)) {
+      setError('Hex digits only');
+      return;
+    }
+    const cp = parseInt(trimmed, 16);
+    if (cp < PUA_START || cp > PUA_END) {
+      setError(`Must be in PUA range U+${PUA_START.toString(16).toUpperCase()}–U+${PUA_END.toString(16).toUpperCase()}`);
+      return;
+    }
+    const collision = allIcons.find(i => i.id !== icon.id && i.unicode === cp);
+    if (collision) {
+      setError(`Already used by "${collision.name}"`);
+      return;
+    }
+    setError(null);
+    if (cp === icon.unicode) return;
+    await updateIcon(icon.id, { unicode: cp });
+  };
+
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs" htmlFor="unicode-input">Unicode</Label>
+      <div className="flex items-center gap-1">
+        <span className="text-sm text-muted-foreground font-mono">U+</span>
+        <Input
+          id="unicode-input"
+          value={value}
+          onChange={e => setValue(e.target.value)}
+          onBlur={commit}
+          onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+          placeholder="E000"
+          className="font-mono h-8 text-sm"
+          maxLength={6}
+        />
+      </div>
+      {error && (
+        <p className="text-[11px] text-destructive">{error}</p>
+      )}
+    </div>
+  );
 }
 
 export function IconPreviewPanel() {
@@ -64,18 +162,22 @@ export function IconPreviewPanel() {
         {icon && (
           <>
             <Separator />
-            <div className="space-y-1.5">
-              <Label className="text-xs">Width</Label>
-              <div className="text-sm">{icon.width}px</div>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Width</Label>
+                <div className="text-sm">{icon.width}px</div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Height</Label>
+                <div className="text-sm">{icon.height}px</div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">File size</Label>
+                <div className="text-sm">{formatBytes(fileSize)}</div>
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Height</Label>
-              <div className="text-sm">{icon.height}px</div>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">File size</Label>
-              <div className="text-sm">{formatBytes(fileSize)}</div>
-            </div>
+            <NameField key={`name-${icon.id}`} icon={icon} allIcons={icons} />
+            <UnicodeField key={`unicode-${icon.id}`} icon={icon} allIcons={icons} />
           </>
         )}
         <Separator />

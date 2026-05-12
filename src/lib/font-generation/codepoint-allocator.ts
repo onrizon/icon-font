@@ -1,7 +1,5 @@
 import type { IconGlyph } from '@/types';
-
-const PUA_START = 0xe000;
-const PUA_END = 0xf8ff;
+import { PUA_START, PUA_END } from './constants';
 
 export function allocateCodepoints(icons: IconGlyph[]): Map<string, number> {
   const allocation = new Map<string, number>();

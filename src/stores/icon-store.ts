@@ -1,9 +1,12 @@
 import { create } from 'zustand';
 import { v4 as uuid } from 'uuid';
 import {
-  collection, doc, getDocs, updateDoc, deleteDoc, query, where, writeBatch,
+  collection, doc, getDocs, updateDoc, query, where, writeBatch, increment,
 } from 'firebase/firestore';
 import { firestore } from '@/lib/firebase';
+import { getIdToken } from '@/hooks/use-auth';
+import { useProjectStore } from '@/stores/project-store';
+import { validateIcon } from '@/lib/firestore-schema';
 import type { IconGlyph } from '@/types';
 
 interface IconStore {
@@ -27,10 +30,7 @@ function omitUndefined(obj: Record<string, unknown>): Record<string, unknown> {
 
 function snapToIcons(snap: Awaited<ReturnType<typeof getDocs>>): IconGlyph[] {
   return snap.docs
-    .map(d => {
-      const data = d.data();
-      return { ...data, id: d.id, projectId: data.parent } as IconGlyph;
-    })
+    .map(d => validateIcon(d.id, d.data()))
     .sort((a, b) => a.order - b.order);
 }
 
@@ -65,7 +65,32 @@ export const useIconStore = create<IconStore>((set, get) => ({
       const { id, projectId: _pid, ...rest } = icon;
       batch.set(doc(firestore, 'icons', id), omitUndefined({ ...rest, parent: projectId }));
     }
-    await batch.commit();
+    batch.update(doc(firestore, 'project', projectId), {
+      iconCount: increment(iconsToAdd.length),
+      updatedAt: Date.now(),
+    });
+    try {
+      await batch.commit();
+    } catch (err) {
+      const uploadedIds = iconsToAdd.filter(i => i.r2Url).map(i => i.id);
+      if (uploadedIds.length > 0) {
+        try {
+          const token = await getIdToken();
+          await fetch('/api/delete-r2-objects', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ projectId, iconIds: uploadedIds }),
+          });
+        } catch (rollbackErr) {
+          console.error('Rollback failed; orphaned R2 objects:', uploadedIds, rollbackErr);
+        }
+      }
+      throw err;
+    }
+    useProjectStore.getState().adjustIconCount(projectId, iconsToAdd.length);
     const icons = await fetchIcons(projectId);
     set({ icons });
   },
@@ -74,17 +99,48 @@ export const useIconStore = create<IconStore>((set, get) => ({
     const icon = get().icons.find(i => i.id === id);
     const { projectId: _pid, ...rest } = updates as Partial<IconGlyph> & { projectId?: string };
 
+    let uploadedNew = false;
     if (updates.svgContent && icon) {
       const formData = new FormData();
       formData.append('file', new Blob([updates.svgContent], { type: 'image/svg+xml' }), `${id}.svg`);
       formData.append('projectId', icon.projectId);
       formData.append('iconId', id);
-      const res = await fetch('/api/upload-svg', { method: 'POST', body: formData });
+      const token = await getIdToken();
+      const res = await fetch('/api/upload-svg', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      if (!res.ok) {
+        throw new Error(`Upload failed: ${res.status}`);
+      }
       const { url: r2Url } = await res.json();
       rest.r2Url = r2Url;
+      uploadedNew = true;
     }
 
-    await updateDoc(doc(firestore, 'icons', id), omitUndefined({ ...rest, updatedAt: Date.now() }));
+    try {
+      await updateDoc(doc(firestore, 'icons', id), omitUndefined({ ...rest, updatedAt: Date.now() }));
+    } catch (err) {
+      if (uploadedNew && icon) {
+        try {
+          const formData = new FormData();
+          formData.append('file', new Blob([icon.svgContent], { type: 'image/svg+xml' }), `${id}.svg`);
+          formData.append('projectId', icon.projectId);
+          formData.append('iconId', id);
+          const token = await getIdToken();
+          await fetch('/api/upload-svg', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+            body: formData,
+          });
+        } catch (rollbackErr) {
+          console.error('Failed to restore R2 to previous state:', rollbackErr);
+        }
+      }
+      throw err;
+    }
+
     const projectId = icon?.projectId ?? get().icons[0]?.projectId;
     if (projectId) {
       const icons = await fetchIcons(projectId);
@@ -93,9 +149,44 @@ export const useIconStore = create<IconStore>((set, get) => ({
   },
 
   deleteIcons: async (ids) => {
+    const iconsToDelete = get().icons.filter(i => ids.includes(i.id));
+    if (iconsToDelete.length === 0) return;
+
+    const byProject = new Map<string, string[]>();
+    for (const i of iconsToDelete) {
+      const list = byProject.get(i.projectId) ?? [];
+      list.push(i.id);
+      byProject.set(i.projectId, list);
+    }
+
+    const token = await getIdToken();
+    for (const [projectId, iconIds] of byProject) {
+      const res = await fetch('/api/delete-r2-objects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ projectId, iconIds }),
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to delete R2 objects: ${res.status}`);
+      }
+    }
+
     const batch = writeBatch(firestore);
     ids.forEach(id => batch.delete(doc(firestore, 'icons', id)));
+    const now = Date.now();
+    for (const [projectId, iconIds] of byProject) {
+      batch.update(doc(firestore, 'project', projectId), {
+        iconCount: increment(-iconIds.length),
+        updatedAt: now,
+      });
+    }
     await batch.commit();
+    for (const [projectId, iconIds] of byProject) {
+      useProjectStore.getState().adjustIconCount(projectId, -iconIds.length);
+    }
     set({ icons: get().icons.filter(i => !ids.includes(i.id)) });
   },
 

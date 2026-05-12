@@ -14,7 +14,6 @@ export function generateCSS(
   lines.push(`@font-face {
   font-family: '${fontFamily}';
   src: url('fonts/${fontFamily}.woff2') format('woff2'),
-       url('fonts/${fontFamily}.woff') format('woff'),
        url('fonts/${fontFamily}.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;

@@ -57,7 +57,10 @@ export const IconCard = memo(function IconCard({
       title={icon.name}
     >
       <div
-        className={cn('flex items-center justify-center', iconSizeMap[viewMode])}
+        className={cn(
+          'flex items-center justify-center [&>svg]:h-full [&>svg]:w-auto',
+          iconSizeMap[viewMode]
+        )}
         dangerouslySetInnerHTML={{ __html: icon.svgContent }}
       />
       {viewMode !== 'small' && (
@@ -65,7 +68,7 @@ export const IconCard = memo(function IconCard({
           {icon.name}
         </span>
       )}
-      {viewMode === 'large' && icon.unicode && (
+      {viewMode !== 'small' && icon.unicode && (
         <span className="text-[9px] text-muted-foreground/60 font-mono">
           U+{formatCodepoint(icon.unicode)}
         </span>

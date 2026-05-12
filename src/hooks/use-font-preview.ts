@@ -3,16 +3,12 @@
 import { useEffect, useRef, useState } from 'react';
 
 export function useFontPreview(fontBuffer: ArrayBuffer | null, fontFamily: string) {
-  const [fontLoaded, setFontLoaded] = useState(false);
+  const [loadedFor, setLoadedFor] = useState<ArrayBuffer | null>(null);
   const blobUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!fontBuffer) {
-      setFontLoaded(false);
-      return;
-    }
+    if (!fontBuffer) return;
 
-    // Clean up previous blob URL
     if (blobUrlRef.current) {
       URL.revokeObjectURL(blobUrlRef.current);
     }
@@ -22,15 +18,16 @@ export function useFontPreview(fontBuffer: ArrayBuffer | null, fontFamily: strin
     blobUrlRef.current = url;
 
     const fontFace = new FontFace(fontFamily, `url(${url})`);
+    let cancelled = false;
 
     fontFace.load().then(loadedFace => {
+      if (cancelled) return;
       document.fonts.add(loadedFace);
-      setFontLoaded(true);
-    }).catch(() => {
-      setFontLoaded(false);
-    });
+      setLoadedFor(fontBuffer);
+    }).catch(() => {});
 
     return () => {
+      cancelled = true;
       if (blobUrlRef.current) {
         URL.revokeObjectURL(blobUrlRef.current);
         blobUrlRef.current = null;
@@ -38,5 +35,5 @@ export function useFontPreview(fontBuffer: ArrayBuffer | null, fontFamily: strin
     };
   }, [fontBuffer, fontFamily]);
 
-  return fontLoaded;
+  return fontBuffer !== null && loadedFor === fontBuffer;
 }

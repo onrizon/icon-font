@@ -3,7 +3,9 @@ import { v4 as uuid } from 'uuid';
 import {
   collection, doc, getDocs, setDoc, updateDoc, deleteDoc, query, where, writeBatch,
 } from 'firebase/firestore';
-import { firestore } from '@/lib/firebase';
+import { firestore, auth } from '@/lib/firebase';
+import { getIdToken } from '@/hooks/use-auth';
+import { validateProject } from '@/lib/firestore-schema';
 import type { Project, FontSettings } from '@/types';
 
 interface ProjectStore {
@@ -18,9 +20,10 @@ interface ProjectStore {
   updateProject: (id: string, updates: Partial<Project>) => Promise<void>;
   updateFontSettings: (settings: Partial<FontSettings>) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
+  adjustIconCount: (projectId: string, delta: number) => void;
 }
 
-const DEFAULT_PROJECT: Omit<Project, 'id' | 'createdAt' | 'updatedAt'> = {
+const DEFAULT_PROJECT: Omit<Project, 'id' | 'ownerUid' | 'createdAt' | 'updatedAt'> = {
   name: 'My Icon Font',
   fontName: 'my-icons',
   fontFamily: 'my-icons',
@@ -29,11 +32,18 @@ const DEFAULT_PROJECT: Omit<Project, 'id' | 'createdAt' | 'updatedAt'> = {
   ascender: 1024,
   descender: 0,
   baselineOffset: 0,
+  iconCount: 0,
 };
 
-async function fetchProjects(): Promise<Project[]> {
-  const snap = await getDocs(collection(firestore, 'project'));
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Project));
+function requireUid(): string {
+  const uid = auth.currentUser?.uid;
+  if (!uid) throw new Error('Not authenticated');
+  return uid;
+}
+
+async function fetchProjects(uid: string): Promise<Project[]> {
+  const snap = await getDocs(query(collection(firestore, 'project'), where('ownerUid', '==', uid)));
+  return snap.docs.map(d => validateProject(d.id, d.data()));
 }
 
 export const useProjectStore = create<ProjectStore>((set, get) => ({
@@ -43,7 +53,12 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   loading: true,
 
   loadProjects: async () => {
-    const projects = await fetchProjects();
+    const uid = auth.currentUser?.uid;
+    if (!uid) {
+      set({ projects: [], currentProjectId: null, currentProject: null, loading: false });
+      return;
+    }
+    const projects = await fetchProjects(uid);
     if (projects.length === 0) {
       set({ projects: [], currentProjectId: null, currentProject: null, loading: false });
       return;
@@ -59,9 +74,11 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   },
 
   createProject: async (name?: string) => {
+    const uid = requireUid();
     const now = Date.now();
     const project: Project = {
       id: uuid(),
+      ownerUid: uid,
       ...DEFAULT_PROJECT,
       ...(name ? { name, fontName: name.toLowerCase().replace(/\s+/g, '-'), fontFamily: name.toLowerCase().replace(/\s+/g, '-') } : {}),
       createdAt: now,
@@ -69,7 +86,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     };
     const { id, ...data } = project;
     await setDoc(doc(firestore, 'project', id), data);
-    const projects = await fetchProjects();
+    const projects = await fetchProjects(uid);
     set({ projects, currentProjectId: project.id, currentProject: project });
     localStorage.setItem('currentProjectId', project.id);
     return project;
@@ -84,10 +101,11 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   },
 
   updateProject: async (id: string, updates: Partial<Project>) => {
-    await updateDoc(doc(firestore, 'project', id), { ...updates, updatedAt: Date.now() });
-    const projects = await fetchProjects();
-    const currentProject = projects.find(p => p.id === get().currentProjectId) || null;
-    set({ projects, currentProject });
+    const now = Date.now();
+    await updateDoc(doc(firestore, 'project', id), { ...updates, updatedAt: now });
+    const next = get().projects.map(p => (p.id === id ? { ...p, ...updates, updatedAt: now } : p));
+    const currentProject = next.find(p => p.id === get().currentProjectId) || null;
+    set({ projects: next, currentProject });
   },
 
   updateFontSettings: async (settings: Partial<FontSettings>) => {
@@ -96,21 +114,35 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     await get().updateProject(currentProjectId, settings);
   },
 
+  adjustIconCount: (projectId: string, delta: number) => {
+    const next = get().projects.map(p =>
+      p.id === projectId ? { ...p, iconCount: Math.max(0, p.iconCount + delta) } : p
+    );
+    const currentProject = next.find(p => p.id === get().currentProjectId) || null;
+    set({ projects: next, currentProject });
+  },
+
   deleteProject: async (id: string) => {
-    await deleteDoc(doc(firestore, 'project', id));
+    const uid = requireUid();
     const iconsSnap = await getDocs(query(collection(firestore, 'icons'), where('parent', '==', id)));
     if (!iconsSnap.empty) {
       const iconIds = iconsSnap.docs.map(d => d.id);
-      await fetch('/api/delete-r2-objects', {
+      const token = await getIdToken();
+      const res = await fetch('/api/delete-r2-objects', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keys: iconIds.map(iconId => `icons/${id}/${iconId}.svg`) }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ projectId: id, iconIds }),
       });
+      if (!res.ok) throw new Error(`Failed to delete R2 objects: ${res.status}`);
       const batch = writeBatch(firestore);
       iconsSnap.docs.forEach(d => batch.delete(d.ref));
       await batch.commit();
     }
-    const projects = await fetchProjects();
+    await deleteDoc(doc(firestore, 'project', id));
+    const projects = await fetchProjects(uid);
     if (get().currentProjectId === id) {
       localStorage.removeItem('currentProjectId');
       set({ projects, currentProjectId: null, currentProject: null });

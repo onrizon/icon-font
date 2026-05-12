@@ -105,10 +105,10 @@ export default function WorkspacePage() {
   }, [authLoading, user, router]);
 
   useEffect(() => {
-    if (projects.length === 0) {
+    if (!authLoading && user && projects.length === 0) {
       loadProjects();
     }
-  }, [projects.length, loadProjects]);
+  }, [authLoading, user, projects.length, loadProjects]);
 
   useEffect(() => {
     if (!id || projectLoading) return;

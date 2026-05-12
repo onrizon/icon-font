@@ -23,10 +23,12 @@ export default function ProjectsPage() {
   }, [authLoading, user, router]);
 
   useEffect(() => {
-    loadProjects();
-  }, [loadProjects]);
+    if (!authLoading && user) {
+      loadProjects();
+    }
+  }, [authLoading, user, loadProjects]);
 
-  const { counts } = useIconCounts(projects.length);
+  const { counts } = useIconCounts();
 
   if (authLoading || loading) {
     return (

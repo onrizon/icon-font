@@ -70,7 +70,7 @@ export async function downloadFontPackage(
 export async function downloadSingleFormat(
   icons: IconGlyph[],
   project: Project,
-  format: 'ttf' | 'woff' | 'woff2' | 'css'
+  format: 'ttf' | 'woff2' | 'css'
 ): Promise<void> {
   const { fontFamily } = project;
   const { ttfBuffer, codepointMap } = generateFont(icons, project);

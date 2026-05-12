@@ -16,6 +16,11 @@ const svgoConfig = {
     'convertPathData',
     'mergePaths',
     'removeUselessStrokeAndFill',
+    'removeScripts',
+    {
+      name: 'removeAttrs',
+      params: { attrs: 'on.*' },
+    },
   ],
 } as const;
 
