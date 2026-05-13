@@ -17,11 +17,9 @@ export interface GaspRange {
   rangeGaspBehavior: number;
 }
 
-// Smoothing-friendly defaults (matches Material Icons / Fontello convention):
-//  - PPEM ≤ 8         → grayscale only (gridfit at very small sizes hurts).
-//  - PPEM ≤ 0xFFFF    → grayscale + gridfit + symmetric smoothing + symmetric gridfit.
+// Icomoon-style single range: aggressive smoothing + gridfit at *all* sizes.
+// Matches src/components/fonts/icomoon.ttf byte-for-byte (gasp table = 8 bytes).
 export const DEFAULT_GASP_RANGES: GaspRange[] = [
-  { rangeMaxPPEM: 8, rangeGaspBehavior: GASP_DOGRAY },
   {
     rangeMaxPPEM: 0xffff,
     rangeGaspBehavior:

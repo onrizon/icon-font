@@ -78,6 +78,9 @@ export function ProjectSettings() {
         <Separator />
 
         <h3 className={styles.heading}>Font Metrics</h3>
+        <p className={styles.advancedNote}>
+          Ascender, Descender, and Units Per Em are currently overridden by the icomoon-style preset at export. These fields are kept for future use.
+        </p>
 
         <div className={styles.fieldGroup}>
           <div className={styles.field}>

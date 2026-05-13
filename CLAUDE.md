@@ -24,7 +24,7 @@ The app converts SVG icons into font files through this pipeline:
 
 1. **Import**: SVG files → SVGO optimize → DOMParser parse → shape-to-path → normalize to square viewBox → store as `IconGlyph`
 2. **Font Import**: TTF/WOFF/WOFF2/SVG font → opentype.parse or DOMParser (WOFF2 decompressed first) → reverse Y-flip transform → bounding-box-fitted SVG → store as `IconGlyph`
-3. **Generate**: Icons → allocate PUA codepoints (0xE000–0xF8FF, max ~6,400 icons) → build SVG-font XML (Y-flip + scale) → `fonteditor-core` `Font.create(svg, { type: 'svg' })` (parser converts cubic→quadratic Béziers) → attach raw `gasp` table bytes → `font.write({ type: 'ttf', hinting: true })` → real TrueType (`glyf`/`loca` + `gasp`) ArrayBuffer → WOFF2 via `woff2-encoder`. opentype.js is *not* used on the write path.
+3. **Generate**: Icons → allocate PUA codepoints (0xE000–0xF8FF, max ~6,400 icons) → build SVG-font XML (Y-flip + scale using icomoon-style ascender) → `fonteditor-core` `Font.create(svg, { type: 'svg' })` (parser converts cubic→quadratic Béziers) → override `hhea` / `OS/2` v3 / `post` v3.0 / `name` / `.notdef` (glyf[0]) to match `src/components/fonts/icomoon.ttf` style → attach single-range `gasp` table bytes → `font.write({ type: 'ttf', hinting: true })` → real TrueType (`glyf`/`loca` + `gasp`) ArrayBuffer → WOFF2 via `woff2-encoder`. opentype.js is *not* used on the write path. `Project.ascender` / `Project.descender` are ignored at export; vertical metrics come from `icomoonStyleMetrics(unitsPerEm)` in `font-style.ts`.
 4. **Export**: Font buffers + CSS (with @font-face + icon classes) + HTML demo → JSZip → download. Also supports JSON project export/import for full project serialization.
 
 ### Coordinate Transform (critical)
