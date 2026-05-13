@@ -1,0 +1,57 @@
+.sidebar {
+  border-right: 1px solid var(--border);
+  background-color: color-mix(in oklch, var(--muted) 30%, transparent);
+  display: flex;
+  flex-direction: column;
+  transition: width 0.15s ease;
+  flex-shrink: 0;
+}
+
+.open {
+  width: 12rem;
+}
+
+.closed {
+  width: 3rem;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0.5rem;
+}
+
+.toggleButton {
+  height: 2rem;
+  width: 2rem;
+  padding: 0;
+}
+
+.nav {
+  flex: 1;
+  padding: 0 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.navButton {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.navButtonCollapsed {
+  width: 100%;
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.navLabel {
+  margin-left: 0.5rem;
+}
+
+.footer {
+  padding: 0.5rem;
+}

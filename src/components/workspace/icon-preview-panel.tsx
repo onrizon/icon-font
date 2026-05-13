@@ -9,7 +9,9 @@ import { formatCodepoint } from '@/lib/font-generation/codepoint-allocator';
 import { PUA_START, PUA_END } from '@/lib/font-generation/constants';
 import { sanitizeIconName } from '@/lib/svg-processing/svg-parser';
 import { useMemo, useState } from 'react';
+import clsx from 'clsx';
 import type { IconGlyph } from '@/types';
+import styles from './icon-preview-panel.module.css';
 
 function formatBytes(n: number): string {
   if (n < 1024) return `${n} B`;
@@ -39,19 +41,17 @@ function NameField({ icon, allIcons }: { icon: IconGlyph; allIcons: IconGlyph[] 
   };
 
   return (
-    <div className="space-y-1.5">
-      <Label className="text-xs" htmlFor="name-input">Name</Label>
+    <div className={styles.field}>
+      <Label className={styles.fieldLabel} htmlFor="name-input">Name</Label>
       <Input
         id="name-input"
         value={value}
         onChange={e => setValue(e.target.value)}
         onBlur={commit}
         onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-        className="h-8 text-sm"
+        className={styles.input}
       />
-      {error && (
-        <p className="text-[11px] text-destructive">{error}</p>
-      )}
+      {error && <p className={styles.error}>{error}</p>}
     </div>
   );
 }
@@ -87,10 +87,10 @@ function UnicodeField({ icon, allIcons }: { icon: IconGlyph; allIcons: IconGlyph
   };
 
   return (
-    <div className="space-y-1.5">
-      <Label className="text-xs" htmlFor="unicode-input">Unicode</Label>
-      <div className="flex items-center gap-1">
-        <span className="text-sm text-muted-foreground font-mono">U+</span>
+    <div className={styles.field}>
+      <Label className={styles.fieldLabel} htmlFor="unicode-input">Unicode</Label>
+      <div className={styles.unicodeRow}>
+        <span className={styles.unicodePrefix}>U+</span>
         <Input
           id="unicode-input"
           value={value}
@@ -98,13 +98,11 @@ function UnicodeField({ icon, allIcons }: { icon: IconGlyph; allIcons: IconGlyph
           onBlur={commit}
           onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
           placeholder="E000"
-          className="font-mono h-8 text-sm"
+          className={styles.unicodeInput}
           maxLength={6}
         />
       </div>
-      {error && (
-        <p className="text-[11px] text-destructive">{error}</p>
-      )}
+      {error && <p className={styles.error}>{error}</p>}
     </div>
   );
 }
@@ -128,10 +126,10 @@ export function IconPreviewPanel() {
   );
 
   return (
-    <aside className="w-80 border-l overflow-y-auto">
-      <div className="p-4 space-y-4">
+    <aside className={styles.aside}>
+      <div className={styles.inner}>
         <div
-          className={`aspect-square w-full rounded-md border bg-muted/30 relative overflow-hidden ${icon ? 'cursor-pointer' : ''}`}
+          className={clsx(styles.preview, icon && styles.previewClickable)}
           onDoubleClick={icon ? () => setEditingIconId(icon.id) : undefined}
           title={icon ? 'Double-click to edit' : undefined}
         >
@@ -139,41 +137,39 @@ export function IconPreviewPanel() {
             <>
               {showGrid && (
                 <div
-                  className="pointer-events-none absolute inset-0"
+                  className={styles.previewGrid}
                   style={{
                     backgroundImage:
-                      'conic-gradient(hsl(var(--muted)) 25%, hsl(var(--background)) 25% 75%, hsl(var(--muted)) 75%)',
+                      'conic-gradient(var(--muted) 25%, var(--background) 25% 75%, var(--muted) 75%)',
                     backgroundSize: `calc(200% / ${gridSize}) calc(200% / ${gridSize})`,
                   }}
                 />
               )}
               <div
-                className="absolute inset-0 flex items-center justify-center p-6 [&_svg]:w-full [&_svg]:h-full"
+                className={styles.previewIcon}
                 dangerouslySetInnerHTML={{ __html: icon.svgContent }}
               />
             </>
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">
-              Select an icon to preview
-            </div>
+            <div className={styles.previewEmpty}>Select an icon to preview</div>
           )}
         </div>
 
         {icon && (
           <>
             <Separator />
-            <div className="grid grid-cols-3 gap-2">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Width</Label>
-                <div className="text-sm">{icon.width}px</div>
+            <div className={styles.statsGrid}>
+              <div className={styles.statBlock}>
+                <Label className={styles.statLabel}>Width</Label>
+                <div className={styles.statValue}>{icon.width}px</div>
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Height</Label>
-                <div className="text-sm">{icon.height}px</div>
+              <div className={styles.statBlock}>
+                <Label className={styles.statLabel}>Height</Label>
+                <div className={styles.statValue}>{icon.height}px</div>
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">File size</Label>
-                <div className="text-sm">{formatBytes(fileSize)}</div>
+              <div className={styles.statBlock}>
+                <Label className={styles.statLabel}>File size</Label>
+                <div className={styles.statValue}>{formatBytes(fileSize)}</div>
               </div>
             </div>
             <NameField key={`name-${icon.id}`} icon={icon} allIcons={icons} />

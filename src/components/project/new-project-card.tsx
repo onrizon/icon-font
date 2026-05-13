@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import styles from './new-project-card.module.css';
 
 interface NewProjectCardProps {
   variant?: 'card' | 'button';
@@ -42,25 +43,22 @@ export function NewProjectCard({ variant = 'card' }: NewProjectCardProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {variant === 'card' ? (
-          <button
-            type="button"
-            className="group flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-background p-8 min-h-[160px] text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary/5 transition-colors cursor-pointer"
-          >
-            <Plus className="h-8 w-8" />
-            <span className="text-sm font-medium">New Project</span>
+          <button type="button" className={styles.card}>
+            <Plus className={styles.cardIcon} />
+            <span className={styles.cardLabel}>New Project</span>
           </button>
         ) : (
-          <Button size="sm" className="gap-1.5">
-            <Plus className="h-4 w-4" />
+          <Button size="sm" className={styles.button}>
+            <Plus className={styles.buttonIcon} />
             New Project
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>New Project</DialogTitle>
         </DialogHeader>
-        <div className="flex gap-2">
+        <div className={styles.row}>
           <Input
             autoFocus
             value={name}

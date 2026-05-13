@@ -22,6 +22,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import styles from './project-card.module.css';
 
 interface ProjectCardProps {
   project: Project;
@@ -87,33 +88,29 @@ export function ProjectCard({ project, iconCount }: ProjectCardProps) {
             open();
           }
         }}
-        className="group relative flex flex-col rounded-lg border bg-card p-5 min-h-[160px] hover:border-primary hover:shadow-sm transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring"
+        className={styles.card}
       >
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <h3 className="font-medium text-base truncate">{project.name}</h3>
-            <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
-              <Badge variant="secondary" className="text-xs font-mono">
+        <div className={styles.headerRow}>
+          <div className={styles.headerText}>
+            <h3 className={styles.title}>{project.name}</h3>
+            <div className={styles.meta}>
+              <Badge variant="secondary" className={styles.fontBadge}>
                 {project.fontName}
               </Badge>
-              <span className="text-xs text-muted-foreground">
+              <span className={styles.iconCount}>
                 {iconCount} {iconCount === 1 ? 'icon' : 'icons'}
               </span>
             </div>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 focus:opacity-100 data-[state=open]:opacity-100"
-              >
-                <MoreVertical className="h-4 w-4" />
+              <Button variant="ghost" size="sm" className={styles.menuButton}>
+                <MoreVertical className={styles.menuIcon} />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" onClick={e => e.stopPropagation()}>
               <DropdownMenuItem onSelect={open}>
-                <FolderOpen className="h-4 w-4" />
+                <FolderOpen className={styles.itemIcon} />
                 Open
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -122,28 +119,28 @@ export function ProjectCard({ project, iconCount }: ProjectCardProps) {
                   setRenameOpen(true);
                 }}
               >
-                <Pencil className="h-4 w-4" />
+                <Pencil className={styles.itemIcon} />
                 Rename
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onSelect={() => setDeleteOpen(true)}
-                className="text-destructive focus:text-destructive"
+                className={styles.destructiveItem}
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className={styles.itemIcon} />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
 
-        <div className="mt-auto pt-4 text-xs text-muted-foreground">
+        <div className={styles.footer}>
           Updated {formatRelative(project.updatedAt)}
         </div>
       </div>
 
       <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Rename project</DialogTitle>
           </DialogHeader>
@@ -169,11 +166,11 @@ export function ProjectCard({ project, iconCount }: ProjectCardProps) {
       </Dialog>
 
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete &ldquo;{project.name}&rdquo;?</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">
+          <p className={styles.deleteText}>
             This will permanently remove the project and its {iconCount}{' '}
             {iconCount === 1 ? 'icon' : 'icons'}. This action cannot be undone.
           </p>

@@ -1,0 +1,154 @@
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tabs[data-orientation="horizontal"] {
+  flex-direction: column;
+}
+
+.tabsList {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  padding: 3px;
+  color: var(--muted-foreground);
+}
+
+.tabs[data-orientation="horizontal"] .tabsList {
+  height: 2.25rem;
+}
+
+.tabs[data-orientation="vertical"] .tabsList {
+  height: fit-content;
+  flex-direction: column;
+}
+
+.tabsList[data-variant="default"] {
+  background-color: var(--muted);
+}
+
+.tabsList[data-variant="line"] {
+  gap: 0.25rem;
+  background-color: transparent;
+  border-radius: 0;
+}
+
+.tabsTrigger {
+  position: relative;
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  color: color-mix(in oklch, var(--foreground) 60%, transparent);
+  height: calc(100% - 1px);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.tabsTrigger:hover {
+  color: var(--foreground);
+}
+
+:global(.dark) .tabsTrigger {
+  color: var(--muted-foreground);
+}
+
+:global(.dark) .tabsTrigger:hover {
+  color: var(--foreground);
+}
+
+.tabsTrigger:focus-visible {
+  border-color: var(--ring);
+  outline: 1px solid var(--ring);
+  outline-offset: -1px;
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 50%, transparent);
+}
+
+.tabsTrigger:disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.tabs[data-orientation="vertical"] .tabsTrigger {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.tabsTrigger > :global(svg) {
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.tabsTrigger > :global(svg):not([class*="size-"]) {
+  width: 1rem;
+  height: 1rem;
+}
+
+.tabsTrigger[data-state="active"] {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.tabsList[data-variant="default"] .tabsTrigger[data-state="active"] {
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.tabsList[data-variant="line"] .tabsTrigger {
+  background-color: transparent;
+}
+
+.tabsList[data-variant="line"] .tabsTrigger[data-state="active"] {
+  background-color: transparent;
+  box-shadow: none;
+}
+
+:global(.dark) .tabsTrigger[data-state="active"] {
+  background-color: color-mix(in oklch, var(--input) 30%, transparent);
+  border-color: var(--input);
+  color: var(--foreground);
+}
+
+:global(.dark) .tabsList[data-variant="line"] .tabsTrigger[data-state="active"] {
+  background-color: transparent;
+  border-color: transparent;
+}
+
+/* Underline indicator for the "line" variant */
+.tabsTrigger::after {
+  content: "";
+  position: absolute;
+  background-color: var(--foreground);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.tabs[data-orientation="horizontal"] .tabsTrigger::after {
+  inset-inline: 0;
+  bottom: -5px;
+  height: 2px;
+}
+
+.tabs[data-orientation="vertical"] .tabsTrigger::after {
+  inset-block: 0;
+  right: -4px;
+  width: 2px;
+}
+
+.tabsList[data-variant="line"] .tabsTrigger[data-state="active"]::after {
+  opacity: 1;
+}
+
+.tabsContent {
+  flex: 1;
+  outline: none;
+}

@@ -1,0 +1,46 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+}
+
+.searchWrap {
+  position: relative;
+  flex: 1;
+  max-width: 24rem;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 0.625rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+.searchInput {
+  padding-left: 2rem;
+  height: 2rem;
+}
+
+.count {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+
+.viewModes {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  margin-left: auto;
+}
+
+.viewModeButton {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+}

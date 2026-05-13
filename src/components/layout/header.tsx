@@ -10,6 +10,7 @@ import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useIconStore } from '@/stores/icon-store';
 import { useProjectStore } from '@/stores/project-store';
 import { downloadSelectedSvgs } from '@/lib/export/svg-export';
+import styles from './header.module.css';
 
 export function Header() {
   const [fontDialogOpen, setFontDialogOpen] = useState(false);
@@ -24,32 +25,32 @@ export function Header() {
   };
 
   return (
-    <header className="h-14 border-b bg-background flex items-center px-4 gap-4 shrink-0">
-      <Link href="/projects" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-        <Type className="h-5 w-5 text-primary" />
-        <h1 className="font-semibold text-lg">Icon Font Generator</h1>
+    <header className={styles.header}>
+      <Link href="/projects" className={styles.brand}>
+        <Type className={styles.brandIcon} />
+        <h1 className={styles.brandTitle}>Icon Font Generator</h1>
       </Link>
-      <Button asChild variant="ghost" size="sm" className="gap-1.5">
+      <Button asChild variant="ghost" size="sm" className={styles.button}>
         <Link href="/projects">
-          <LayoutGrid className="h-4 w-4" />
+          <LayoutGrid />
           Projects
         </Link>
       </Button>
-      <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setFontDialogOpen(true)}>
-        <FolderOpen className="h-4 w-4" />
+      <Button variant="outline" size="sm" className={styles.button} onClick={() => setFontDialogOpen(true)}>
+        <FolderOpen />
         Open Font
       </Button>
       <Button
         variant="outline"
         size="sm"
-        className="gap-1.5"
+        className={styles.button}
         onClick={handleDownloadSvgs}
         disabled={selectedCount === 0}
       >
-        <Download className="h-4 w-4" />
+        <Download />
         Download SVGs{selectedCount > 0 ? ` (${selectedCount})` : ''}
       </Button>
-      <div className="ml-auto">
+      <div className={styles.spacer}>
         <ProjectSwitcher />
       </div>
       <OpenFontDialog open={fontDialogOpen} onOpenChange={setFontDialogOpen} />

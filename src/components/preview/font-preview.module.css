@@ -1,0 +1,53 @@
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: var(--muted-foreground);
+}
+
+.inner {
+  padding: 1rem;
+}
+
+.heading {
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.75rem;
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background-color: var(--card);
+}
+
+.glyph {
+  font-size: 1.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.name {
+  font-size: 10px;
+  color: var(--muted-foreground);
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.codepoint {
+  font-size: 9px;
+  color: color-mix(in oklch, var(--muted-foreground) 60%, transparent);
+  font-family: var(--font-mono, ui-monospace, monospace);
+}

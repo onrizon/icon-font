@@ -14,7 +14,7 @@ No test framework is configured.
 
 ## Tech Stack
 
-Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + shadcn/ui (new-york style). Single-page client-side app — all components are `'use client'`. State via Zustand, persistence via Dexie.js (IndexedDB). Font generation via opentype.js + svg-pathdata. WOFF2 compression via woff2-encoder. Drag-and-drop reordering via @dnd-kit. Export via JSZip + file-saver.
+Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + shadcn/ui (new-york style). Single-page client-side app — all components are `'use client'`. State via Zustand, persistence via Dexie.js (IndexedDB). Font writing via `fonteditor-core` (real TrueType glyf/loca + gasp). Font reading via `opentype.js`. SVG path math via `svg-pathdata`. WOFF2 compression via `woff2-encoder`. Drag-and-drop reordering via @dnd-kit. Export via JSZip + file-saver.
 
 ## Architecture
 
@@ -24,7 +24,7 @@ The app converts SVG icons into font files through this pipeline:
 
 1. **Import**: SVG files → SVGO optimize → DOMParser parse → shape-to-path → normalize to square viewBox → store as `IconGlyph`
 2. **Font Import**: TTF/WOFF/WOFF2/SVG font → opentype.parse or DOMParser (WOFF2 decompressed first) → reverse Y-flip transform → bounding-box-fitted SVG → store as `IconGlyph`
-3. **Generate**: Icons → allocate PUA codepoints (0xE000–0xF8FF, max ~6,400 icons) → SVG path → opentype.Path (Y-flip + scale) → opentype.Font → ArrayBuffer → TTF/WOFF/WOFF2/SVG output
+3. **Generate**: Icons → allocate PUA codepoints (0xE000–0xF8FF, max ~6,400 icons) → build SVG-font XML (Y-flip + scale) → `fonteditor-core` `Font.create(svg, { type: 'svg' })` (parser converts cubic→quadratic Béziers) → attach raw `gasp` table bytes → `font.write({ type: 'ttf', hinting: true })` → real TrueType (`glyf`/`loca` + `gasp`) ArrayBuffer → WOFF2 via `woff2-encoder`. opentype.js is *not* used on the write path.
 4. **Export**: Font buffers + CSS (with @font-face + icon classes) + HTML demo → JSZip → download. Also supports JSON project export/import for full project serialization.
 
 ### Coordinate Transform (critical)
@@ -56,7 +56,8 @@ Single route (`page.tsx`). `Home` component loads projects/icons, renders Header
 ## Key Gotchas
 
 - **SVGO**: Must `import from 'svgo/browser'` — the main entry pulls in `fs/promises`. Cast config `as any` due to different browser types.
-- **opentype.js**: No `@types` package — custom declarations at `src/types/opentype.d.ts`. Extend this file when using new opentype APIs.
+- **opentype.js**: No `@types` package — custom declarations at `src/types/opentype.d.ts`. Used **only for reading** imported fonts (`font-file-parser.ts`). Extend the d.ts when using new opentype APIs.
+- **fonteditor-core**: Used **only for writing** the generated TTF (real glyf/loca + gasp). Built-in TS types at `node_modules/fonteditor-core/index.d.ts` are partial; the gasp field isn't declared on `TTFObject` and gets attached via a typed-cast in `opentype-generator.ts`. The writer only emits the gasp table when called with `hinting: true`.
 - **svg-pathdata**: Arc-to-curve is `A_TO_C()` not `ARC_TO_CUBIC_CURVES`. Transform methods (`scale`, `translate`, `toAbs`) return new instances. Use `encodeSVGPath(path.commands)` to serialize.
 - **woff2-encoder**: Async compression/decompression — can fail silently, wrapped in try/catch. WOFF2 detected via magic bytes (`0x774F4632`).
 - **Path alias**: `@/*` maps to `./src/*` (tsconfig).

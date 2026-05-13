@@ -1,0 +1,179 @@
+.content {
+  z-index: 50;
+  min-width: 8rem;
+  max-height: var(--radix-dropdown-menu-content-available-height);
+  overflow-x: hidden;
+  overflow-y: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background-color: var(--popover);
+  color: var(--popover-foreground);
+  padding: 0.25rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.subContent {
+  z-index: 50;
+  min-width: 8rem;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background-color: var(--popover);
+  color: var(--popover-foreground);
+  padding: 0.25rem;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.item {
+  position: relative;
+  display: flex;
+  cursor: default;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: var(--radius-sm);
+  padding: 0.375rem 0.5rem;
+  font-size: 0.875rem;
+  outline: none;
+  user-select: none;
+}
+
+.item:focus {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.item[data-disabled] {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.item[data-inset] {
+  padding-left: 2rem;
+}
+
+.item[data-variant="destructive"] {
+  color: var(--destructive);
+}
+
+.item[data-variant="destructive"]:focus {
+  background-color: color-mix(in oklch, var(--destructive) 10%, transparent);
+  color: var(--destructive);
+}
+
+:global(.dark) .item[data-variant="destructive"]:focus {
+  background-color: color-mix(in oklch, var(--destructive) 20%, transparent);
+}
+
+.item > :global(svg) {
+  pointer-events: none;
+  flex-shrink: 0;
+  color: var(--muted-foreground);
+}
+
+.item > :global(svg):not([class*="size-"]) {
+  width: 1rem;
+  height: 1rem;
+}
+
+.item[data-variant="destructive"] > :global(svg) {
+  color: var(--destructive) !important;
+}
+
+.checkboxItem,
+.radioItem {
+  position: relative;
+  display: flex;
+  cursor: default;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: var(--radius-sm);
+  padding: 0.375rem 0.5rem 0.375rem 2rem;
+  font-size: 0.875rem;
+  outline: none;
+  user-select: none;
+}
+
+.checkboxItem:focus,
+.radioItem:focus {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.checkboxItem[data-disabled],
+.radioItem[data-disabled] {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.itemIndicator {
+  position: absolute;
+  left: 0.5rem;
+  display: flex;
+  width: 0.875rem;
+  height: 0.875rem;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.label {
+  padding: 0.375rem 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.label[data-inset] {
+  padding-left: 2rem;
+}
+
+.separator {
+  background-color: var(--border);
+  margin: 0.25rem -0.25rem;
+  height: 1px;
+}
+
+.shortcut {
+  margin-left: auto;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: var(--muted-foreground);
+}
+
+.subTrigger {
+  display: flex;
+  cursor: default;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: var(--radius-sm);
+  padding: 0.375rem 0.5rem;
+  font-size: 0.875rem;
+  outline: none;
+  user-select: none;
+}
+
+.subTrigger:focus,
+.subTrigger[data-state="open"] {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.subTrigger[data-inset] {
+  padding-left: 2rem;
+}
+
+.subTrigger > :global(svg) {
+  pointer-events: none;
+  flex-shrink: 0;
+  color: var(--muted-foreground);
+}
+
+.subTrigger > :global(svg):not([class*="size-"]) {
+  width: 1rem;
+  height: 1rem;
+}
+
+.subTriggerChevron {
+  margin-left: auto;
+  width: 1rem;
+  height: 1rem;
+}

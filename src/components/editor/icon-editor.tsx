@@ -9,6 +9,7 @@ import { useWorkspaceStore } from '@/stores/workspace-store';
 import type { IconGlyph } from '@/types';
 import { ArrowLeft, Loader2, Move, RotateCcw, Save } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import styles from './icon-editor.module.css';
 import { IconProperties } from './icon-properties';
 import { TransformPanel } from './transform-panel';
 
@@ -24,9 +25,9 @@ export function IconEditor() {
 
   if (!savedIcon) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+      <div className={styles.empty}>
         <p>Select an icon to edit</p>
-        <p className="text-sm mt-1">Double-click an icon in the grid</p>
+        <p className={styles.emptyHint}>Double-click an icon in the grid</p>
       </div>
     );
   }
@@ -119,46 +120,46 @@ function EditorBody({ savedIcon }: { savedIcon: IconGlyph }) {
     if (isSaving) return;
     setIsSaving(true);
     try {
-    let finalDraft = { ...draft };
+      let finalDraft = { ...draft };
 
-    if (pendingScale !== 1) {
-      const [, , , vbSize] = finalDraft.viewBox.split(/[\s,]+/).map(Number);
-      const size = vbSize || finalDraft.width;
-      const newPathData = applyTransform(finalDraft.pathData, { ...getDefaultTransform(), scale: pendingScale }, size);
-      finalDraft = {
-        ...finalDraft,
-        pathData: newPathData,
-        svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${finalDraft.viewBox}">\n  <path d="${newPathData}" fill="currentColor"/>\n</svg>`,
-      };
-    }
+      if (pendingScale !== 1) {
+        const [, , , vbSize] = finalDraft.viewBox.split(/[\s,]+/).map(Number);
+        const size = vbSize || finalDraft.width;
+        const newPathData = applyTransform(finalDraft.pathData, { ...getDefaultTransform(), scale: pendingScale }, size);
+        finalDraft = {
+          ...finalDraft,
+          pathData: newPathData,
+          svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${finalDraft.viewBox}">\n  <path d="${newPathData}" fill="currentColor"/>\n</svg>`,
+        };
+      }
 
-    if (pendingTranslate.x !== 0 || pendingTranslate.y !== 0) {
-      const [, , vbW, vbH] = finalDraft.viewBox.split(/[\s,]+/).map(Number);
-      const size = Math.max(vbW || finalDraft.width, vbH || finalDraft.height);
-      const svgUnitsPerPx = size / canvasContentPx;
-      const newPathData = applyTransform(finalDraft.pathData, {
-        ...getDefaultTransform(),
-        translateX: pendingTranslate.x * svgUnitsPerPx,
-        translateY: pendingTranslate.y * svgUnitsPerPx,
-      }, size);
-      finalDraft = {
-        ...finalDraft,
-        pathData: newPathData,
-        svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${finalDraft.viewBox}">\n  <path d="${newPathData}" fill="currentColor"/>\n</svg>`,
-      };
-    }
+      if (pendingTranslate.x !== 0 || pendingTranslate.y !== 0) {
+        const [, , vbW, vbH] = finalDraft.viewBox.split(/[\s,]+/).map(Number);
+        const size = Math.max(vbW || finalDraft.width, vbH || finalDraft.height);
+        const svgUnitsPerPx = size / canvasContentPx;
+        const newPathData = applyTransform(finalDraft.pathData, {
+          ...getDefaultTransform(),
+          translateX: pendingTranslate.x * svgUnitsPerPx,
+          translateY: pendingTranslate.y * svgUnitsPerPx,
+        }, size);
+        finalDraft = {
+          ...finalDraft,
+          pathData: newPathData,
+          svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${finalDraft.viewBox}">\n  <path d="${newPathData}" fill="currentColor"/>\n</svg>`,
+        };
+      }
 
-    await updateIcon(savedIcon.id, {
-      name: finalDraft.name,
-      unicode: finalDraft.unicode,
-      ligature: finalDraft.ligature,
-      tags: finalDraft.tags,
-      pathData: finalDraft.pathData,
-      svgContent: finalDraft.svgContent,
-    });
+      await updateIcon(savedIcon.id, {
+        name: finalDraft.name,
+        unicode: finalDraft.unicode,
+        ligature: finalDraft.ligature,
+        tags: finalDraft.tags,
+        pathData: finalDraft.pathData,
+        svgContent: finalDraft.svgContent,
+      });
 
-    setPendingScale(1);
-    setPendingTranslate({ x: 0, y: 0 });
+      setPendingScale(1);
+      setPendingTranslate({ x: 0, y: 0 });
     } finally {
       setIsSaving(false);
     }
@@ -187,52 +188,51 @@ function EditorBody({ savedIcon }: { savedIcon: IconGlyph }) {
   }, [pendingScale, pendingTranslate]);
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center gap-2 px-4 py-3 border-b">
-        <Button variant="ghost" size="sm" onClick={() => setEditingIconId(null)}>
-          <ArrowLeft className="h-4 w-4 mr-1" />
+    <div className={styles.editor}>
+      <div className={styles.headerBar}>
+        <Button variant="outline" size="sm" onClick={() => setEditingIconId(null)}>
+          <ArrowLeft />
           Back
         </Button>
-        <h2 className="font-medium">Edit: {draft.name}</h2>
-        <div className="ml-auto flex items-center gap-2">
+        <h2 className={styles.title}>Edit: {draft.name}</h2>
+        <div className={styles.headerActions}>
           <Button
             variant="outline"
             size="sm"
             onClick={handleReset}
             disabled={!isDirty || isSaving}
-            className="gap-1 cursor-pointer"
+            className={styles.actionButton}
           >
-            <RotateCcw className="h-3.5 w-3.5" />
+            <RotateCcw className={styles.actionIcon} />
             Reset
           </Button>
           <Button
             size="sm"
             onClick={handleSave}
             disabled={!isDirty || isSaving}
-            className="gap-1 cursor-pointer"
+            className={styles.actionButton}
           >
-            {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+            {isSaving ? <Loader2 className={styles.actionIcon} /> : <Save className={styles.actionIcon} />}
             {isSaving ? 'Saving…' : 'Save'}
           </Button>
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8 bg-muted/30">
-
-          <div className="flex items-center gap-2">
+      <div className={styles.body}>
+        <div className={styles.canvasArea}>
+          <div className={styles.canvasToolbar}>
             <Button
               variant={dragMode ? 'default' : 'outline'}
               size="sm"
-              className="h-7 gap-1 text-xs cursor-pointer"
+              className={styles.dragButton}
               onClick={() => setDragMode(v => !v)}
               title="Drag to reposition the icon"
             >
-              <Move className="h-3.5 w-3.5" />
+              <Move className={styles.dragIcon} />
               Drag
             </Button>
-            <div className="flex items-center gap-1">
-              <Label htmlFor="canvas-w" className="text-xs text-muted-foreground">W</Label>
+            <div className={styles.sizeInputs}>
+              <Label htmlFor="canvas-w" className={styles.sizeLabel}>W</Label>
               <Input
                 id="canvas-w"
                 type="number"
@@ -241,9 +241,9 @@ function EditorBody({ savedIcon }: { savedIcon: IconGlyph }) {
                 max={CANVAS_MAX_PX}
                 step={32}
                 onChange={e => setCanvasWidth(clampCanvas(parseInt(e.target.value, 10)))}
-                className="h-7 w-16 text-xs"
+                className={styles.sizeInput}
               />
-              <Label htmlFor="canvas-h" className="text-xs text-muted-foreground">H</Label>
+              <Label htmlFor="canvas-h" className={styles.sizeLabel}>H</Label>
               <Input
                 id="canvas-h"
                 type="number"
@@ -252,13 +252,13 @@ function EditorBody({ savedIcon }: { savedIcon: IconGlyph }) {
                 max={CANVAS_MAX_PX}
                 step={32}
                 onChange={e => setCanvasHeight(clampCanvas(parseInt(e.target.value, 10)))}
-                className="h-7 w-16 text-xs"
+                className={styles.sizeInput}
               />
             </div>
           </div>
 
           <div
-            className="relative rounded-lg border shadow-sm overflow-hidden select-none"
+            className={styles.canvas}
             style={{
               width: canvasWidth,
               height: canvasHeight,
@@ -275,23 +275,20 @@ function EditorBody({ savedIcon }: { savedIcon: IconGlyph }) {
             }}
             onMouseDown={handleCanvasMouseDown}
           >
-            <svg
-              className="absolute inset-0 w-full h-full pointer-events-none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <line x1="50%" y1="0" x2="50%" y2="100%" stroke="hsl(var(--border))" strokeWidth="1" strokeDasharray="4" />
-              <line x1="0" y1="50%" x2="100%" y2="50%" stroke="hsl(var(--border))" strokeWidth="1" strokeDasharray="4" />
+            <svg className={styles.crosshair} xmlns="http://www.w3.org/2000/svg">
+              <line x1="50%" y1="0" x2="50%" y2="100%" stroke="var(--border)" strokeWidth="1" strokeDasharray="4" />
+              <line x1="0" y1="50%" x2="100%" y2="50%" stroke="var(--border)" strokeWidth="1" strokeDasharray="4" />
             </svg>
 
             <div
-              className="absolute flex items-center justify-center [&>svg]:w-full [&>svg]:h-full pointer-events-none"
+              className={styles.iconWrap}
               style={previewTransform ? { transform: previewTransform } : undefined}
               dangerouslySetInnerHTML={{ __html: draft.svgContent }}
             />
           </div>
         </div>
 
-        <div className="w-80 border-l overflow-y-auto">
+        <div className={styles.sidebar}>
           <IconProperties icon={draft} onUpdate={handleUpdateDraft} />
           <TransformPanel
             icon={draft}

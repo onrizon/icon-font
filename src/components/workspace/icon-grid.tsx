@@ -17,16 +17,17 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import clsx from 'clsx';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useIconStore } from '@/stores/icon-store';
 import { IconCard } from './icon-card';
 import type { IconGlyph, ViewMode } from '@/types';
-import { cn } from '@/lib/utils';
+import styles from './icon-grid.module.css';
 
-const gridColsMap: Record<ViewMode, string> = {
-  small: 'grid-cols-[repeat(auto-fill,minmax(4rem,1fr))]',
-  medium: 'grid-cols-[repeat(auto-fill,minmax(6rem,1fr))]',
-  large: 'grid-cols-[repeat(auto-fill,minmax(8rem,1fr))]',
+const gridClass: Record<ViewMode, string> = {
+  small: styles.gridSmall,
+  medium: styles.gridMedium,
+  large: styles.gridLarge,
 };
 
 function SortableIconCard({
@@ -128,7 +129,7 @@ export function IconGrid() {
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={allIds} strategy={rectSortingStrategy}>
-        <div className={cn('grid gap-2 p-4', gridColsMap[viewMode])}>
+        <div className={clsx(styles.grid, gridClass[viewMode])}>
           {icons.map(icon => (
             <SortableIconCard
               key={icon.id}

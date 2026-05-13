@@ -1,0 +1,17 @@
+.grid {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1rem;
+}
+
+.gridSmall {
+  grid-template-columns: repeat(auto-fill, minmax(4rem, 1fr));
+}
+
+.gridMedium {
+  grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
+}
+
+.gridLarge {
+  grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+}

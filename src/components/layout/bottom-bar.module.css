@@ -1,0 +1,16 @@
+.footer {
+  height: 2rem;
+  border-top: 1px solid var(--border);
+  background-color: color-mix(in oklch, var(--muted) 30%, transparent);
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.pushRight {
+  margin-left: auto;
+}

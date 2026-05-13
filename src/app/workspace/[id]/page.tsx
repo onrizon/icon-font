@@ -19,6 +19,7 @@ import { GeneratePanel } from '@/components/generate/generate-panel';
 import { ProjectSettings } from '@/components/project/project-settings';
 import { IconPreviewPanel } from '@/components/workspace/icon-preview-panel';
 import { Loader2 } from 'lucide-react';
+import styles from './page.module.css';
 
 function WorkspaceContent() {
   const activeTab = useWorkspaceStore(s => s.activeTab);
@@ -60,18 +61,18 @@ function WorkspaceContent() {
       return <ProjectSettings />;
     default:
       return (
-        <div className="flex h-full">
-          <div className="flex flex-col flex-1 min-w-0">
+        <div className={styles.workspaceContent}>
+          <div className={styles.contentColumn}>
             <SearchToolbar />
             <SelectionToolbar />
-            <div className="flex-1 overflow-auto">
+            <div className={styles.scrollArea}>
               {icons.length === 0 ? (
-                <div className="flex items-center justify-center h-full p-8">
+                <div className={styles.emptyState}>
                   <SvgDropzone onFilesAccepted={importSvgFiles} importing={importing} />
                 </div>
               ) : (
                 <>
-                  <div className="px-4 pt-2">
+                  <div className={styles.dropzoneWrap}>
                     <SvgDropzone onFilesAccepted={importSvgFiles} importing={importing} compact />
                   </div>
                   <IconGrid />
@@ -130,18 +131,18 @@ export default function WorkspacePage() {
 
   if (authLoading || projectLoading || !currentProjectId) {
     return (
-      <div className="h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className={styles.loading}>
+        <Loader2 className={styles.spinner} />
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className={styles.page}>
       <Header />
-      <div className="flex flex-1 overflow-hidden">
+      <div className={styles.body}>
         <Sidebar />
-        <main className="flex-1 overflow-hidden">
+        <main className={styles.main}>
           <WorkspaceContent />
         </main>
       </div>

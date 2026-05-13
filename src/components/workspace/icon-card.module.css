@@ -1,0 +1,59 @@
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background-color: var(--card);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.card:hover {
+  border-color: color-mix(in oklch, var(--primary) 50%, transparent);
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.cardSelected {
+  border-color: var(--primary);
+  background-color: color-mix(in oklch, var(--primary) 10%, transparent);
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.sizeSmall { width: 4rem; height: 4rem; }
+.sizeMedium { width: 6rem; height: 6rem; }
+.sizeLarge { width: 8rem; height: 8rem; }
+
+.iconWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconWrap > :global(svg) {
+  height: 100%;
+  width: auto;
+}
+
+.iconSizeSmall { width: 2rem; height: 2rem; }
+.iconSizeMedium { width: 3rem; height: 3rem; }
+.iconSizeLarge { width: 4rem; height: 4rem; }
+
+.name {
+  margin-top: 0.25rem;
+  font-size: 10px;
+  color: var(--muted-foreground);
+  max-width: 100%;
+  padding: 0 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.codepoint {
+  font-size: 9px;
+  color: color-mix(in oklch, var(--muted-foreground) 60%, transparent);
+  font-family: var(--font-mono, ui-monospace, monospace);
+}

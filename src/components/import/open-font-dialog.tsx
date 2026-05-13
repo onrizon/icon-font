@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import styles from './open-font-dialog.module.css';
 
 interface OpenFontDialogProps {
   open: boolean;
@@ -27,11 +28,9 @@ export function OpenFontDialog({ open, onOpenChange }: OpenFontDialogProps) {
       const file = e.target.files?.[0];
       if (!file) return;
       const result = await parseFile(file);
-      // JSON imports complete immediately — close dialog
       if (result === 'json-imported') {
         onOpenChange(false);
       }
-      // Reset input so the same file can be re-selected
       if (fileInputRef.current) fileInputRef.current.value = '';
     },
     [parseFile, onOpenChange]
@@ -50,7 +49,7 @@ export function OpenFontDialog({ open, onOpenChange }: OpenFontDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Open Font File</DialogTitle>
           <DialogDescription>
@@ -59,28 +58,27 @@ export function OpenFontDialog({ open, onOpenChange }: OpenFontDialogProps) {
         </DialogHeader>
 
         {!parsedFont && (
-          <div className="flex flex-col items-center gap-4 py-4">
+          <div className={styles.fileSection}>
             <input
               ref={fileInputRef}
               type="file"
               accept=".ttf,.woff,.woff2,.svg,.json"
               onChange={handleFileChange}
-              className="hidden"
+              className={styles.hiddenInput}
             />
             <Button
               variant="outline"
               size="lg"
               onClick={() => fileInputRef.current?.click()}
               disabled={importing}
-              className="gap-2"
             >
-              <FileUp className="h-4 w-4" />
+              <FileUp className={styles.chooseIcon} />
               {importing ? 'Parsing...' : 'Choose File'}
             </Button>
 
             {error && (
-              <div className="flex items-center gap-2 text-sm text-destructive">
-                <AlertCircle className="h-4 w-4 shrink-0" />
+              <div className={styles.error}>
+                <AlertCircle className={styles.errorIcon} />
                 <span>{error}</span>
               </div>
             )}
@@ -89,40 +87,40 @@ export function OpenFontDialog({ open, onOpenChange }: OpenFontDialogProps) {
 
         {parsedFont && (
           <>
-            <div className="space-y-3 text-sm">
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                <span className="text-muted-foreground">Font Family</span>
-                <span className="font-medium">{parsedFont.fontFamily}</span>
-                <span className="text-muted-foreground">Units Per Em</span>
-                <span className="font-medium">{parsedFont.unitsPerEm}</span>
-                <span className="text-muted-foreground">Ascender</span>
-                <span className="font-medium">{parsedFont.ascender}</span>
-                <span className="text-muted-foreground">Descender</span>
-                <span className="font-medium">{parsedFont.descender}</span>
-                <span className="text-muted-foreground">Glyphs</span>
-                <span className="font-medium">{parsedFont.glyphs.length}</span>
+            <div className={styles.meta}>
+              <div className={styles.metaGrid}>
+                <span className={styles.metaLabel}>Font Family</span>
+                <span className={styles.metaValue}>{parsedFont.fontFamily}</span>
+                <span className={styles.metaLabel}>Units Per Em</span>
+                <span className={styles.metaValue}>{parsedFont.unitsPerEm}</span>
+                <span className={styles.metaLabel}>Ascender</span>
+                <span className={styles.metaValue}>{parsedFont.ascender}</span>
+                <span className={styles.metaLabel}>Descender</span>
+                <span className={styles.metaValue}>{parsedFont.descender}</span>
+                <span className={styles.metaLabel}>Glyphs</span>
+                <span className={styles.metaValue}>{parsedFont.glyphs.length}</span>
               </div>
 
               {parsedFont.glyphs.length > 0 && (
                 <div>
-                  <p className="text-muted-foreground mb-2">Preview</p>
-                  <div className="grid grid-cols-10 gap-1 max-h-40 overflow-y-auto rounded-md border p-2">
+                  <p className={styles.previewLabel}>Preview</p>
+                  <div className={styles.previewGrid}>
                     {parsedFont.glyphs.slice(0, 60).map((g, i) => (
                       <div
                         key={i}
-                        className="aspect-square rounded bg-muted/50 p-1 flex items-center justify-center"
+                        className={styles.previewCell}
                         title={`${g.name} (U+${g.unicode.toString(16).padStart(4, '0').toUpperCase()})`}
                       >
                         <svg
                           viewBox={g.viewBox}
-                          className="w-full h-full"
+                          className={styles.previewCellSvg}
                           dangerouslySetInnerHTML={{ __html: `<path d="${g.pathData}" fill="currentColor"/>` }}
                         />
                       </div>
                     ))}
                   </div>
                   {parsedFont.glyphs.length > 60 && (
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className={styles.previewMore}>
                       ...and {parsedFont.glyphs.length - 60} more
                     </p>
                   )}
@@ -131,8 +129,8 @@ export function OpenFontDialog({ open, onOpenChange }: OpenFontDialogProps) {
             </div>
 
             {error && (
-              <div className="flex items-center gap-2 text-sm text-destructive">
-                <AlertCircle className="h-4 w-4 shrink-0" />
+              <div className={styles.error}>
+                <AlertCircle className={styles.errorIcon} />
                 <span>{error}</span>
               </div>
             )}

@@ -1,0 +1,80 @@
+.compact {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: var(--radius-lg);
+  border: 2px dashed color-mix(in oklch, var(--muted-foreground) 25%, transparent);
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.compact:hover {
+  border-color: color-mix(in oklch, var(--primary) 50%, transparent);
+}
+
+.compactActive {
+  border-color: var(--primary);
+  background-color: color-mix(in oklch, var(--primary) 5%, transparent);
+}
+
+.compactDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.compactIcon {
+  width: 1rem;
+  height: 1rem;
+  color: var(--muted-foreground);
+}
+
+.compactText {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+
+.full {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xl);
+  border: 2px dashed color-mix(in oklch, var(--muted-foreground) 25%, transparent);
+  padding: 3rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.full:hover {
+  border-color: color-mix(in oklch, var(--primary) 50%, transparent);
+}
+
+.fullActive {
+  border-color: var(--primary);
+  background-color: color-mix(in oklch, var(--primary) 5%, transparent);
+  transform: scale(1.01);
+}
+
+.fullDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fullIcon {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--muted-foreground);
+  margin-bottom: 1rem;
+}
+
+.fullTitle {
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.fullSubtitle {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}

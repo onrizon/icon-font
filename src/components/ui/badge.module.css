@@ -1,0 +1,97 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 500;
+  width: fit-content;
+  white-space: nowrap;
+  flex-shrink: 0;
+  gap: 0.25rem;
+  overflow: hidden;
+  transition-property: color, box-shadow;
+  transition-duration: 0.15s;
+}
+
+.badge > :global(svg) {
+  width: 0.75rem;
+  height: 0.75rem;
+  pointer-events: none;
+}
+
+.badge:focus-visible {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 50%, transparent);
+}
+
+.badge[aria-invalid="true"] {
+  border-color: var(--destructive);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--destructive) 20%, transparent);
+}
+
+:global(.dark) .badge[aria-invalid="true"] {
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--destructive) 40%, transparent);
+}
+
+.variantDefault {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+a.variantDefault:hover {
+  background-color: color-mix(in oklch, var(--primary) 90%, transparent);
+}
+
+.variantSecondary {
+  background-color: var(--secondary);
+  color: var(--secondary-foreground);
+}
+a.variantSecondary:hover {
+  background-color: color-mix(in oklch, var(--secondary) 90%, transparent);
+}
+
+.variantDestructive {
+  background-color: var(--destructive);
+  color: #fff;
+}
+a.variantDestructive:hover {
+  background-color: color-mix(in oklch, var(--destructive) 90%, transparent);
+}
+.variantDestructive:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--destructive) 20%, transparent);
+}
+:global(.dark) .variantDestructive {
+  background-color: color-mix(in oklch, var(--destructive) 60%, transparent);
+}
+:global(.dark) .variantDestructive:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--destructive) 40%, transparent);
+}
+
+.variantOutline {
+  border-color: var(--border);
+  color: var(--foreground);
+}
+a.variantOutline:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.variantGhost {
+  background-color: transparent;
+}
+a.variantGhost:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.variantLink {
+  color: var(--primary);
+  text-underline-offset: 4px;
+  background-color: transparent;
+}
+a.variantLink:hover {
+  text-decoration: underline;
+}

@@ -9,6 +9,7 @@ import { X } from 'lucide-react';
 import type { IconGlyph } from '@/types';
 import { formatCodepoint } from '@/lib/font-generation/codepoint-allocator';
 import { PUA_START, PUA_END } from '@/lib/font-generation/constants';
+import styles from './icon-properties.module.css';
 
 interface IconPropertiesProps {
   icon: IconGlyph;
@@ -63,68 +64,72 @@ export function IconProperties({ icon, onUpdate }: IconPropertiesProps) {
   );
 
   return (
-    <div className="p-4 space-y-4">
-      <h3 className="font-medium text-sm">Properties</h3>
+    <div className={styles.panel}>
+      <h3 className={styles.heading}>Properties</h3>
 
-      <div className="space-y-2">
+      <div className={styles.field}>
         <Label htmlFor="icon-name">Name</Label>
         <Input
           id="icon-name"
           value={icon.name}
           onChange={handleNameChange}
-          className="h-8"
+          className={styles.input}
         />
       </div>
 
-      <div className="space-y-2">
+      <div className={styles.field}>
         <Label htmlFor="icon-unicode">Unicode (PUA)</Label>
         <Input
           id="icon-unicode"
           value={icon.unicode ? formatCodepoint(icon.unicode) : ''}
           onChange={handleUnicodeChange}
           placeholder="E000"
-          className="h-8 font-mono"
+          className={styles.mono}
         />
       </div>
 
-      <div className="space-y-2">
+      <div className={styles.field}>
         <Label htmlFor="icon-ligature">Ligature</Label>
         <Input
           id="icon-ligature"
           value={icon.ligature || ''}
           onChange={handleLigatureChange}
           placeholder="Optional ligature text"
-          className="h-8"
+          className={styles.input}
         />
       </div>
 
-      <div className="space-y-2">
+      <div className={styles.field}>
         <Label>Tags</Label>
-        <div className="flex flex-wrap gap-1 mb-2">
+        <div className={styles.tags}>
           {icon.tags.map(tag => (
-            <Badge key={tag} variant="secondary" className="text-xs">
+            <Badge key={tag} variant="secondary" className={styles.tagBadge}>
               {tag}
-              <button onClick={() => handleRemoveTag(tag)} className="ml-1">
-                <X className="h-3 w-3" />
+              <button
+                onClick={() => handleRemoveTag(tag)}
+                className={styles.tagRemove}
+                aria-label={`Remove tag ${tag}`}
+              >
+                <X className={styles.tagRemoveIcon} />
               </button>
             </Badge>
           ))}
         </div>
-        <div className="flex gap-1">
+        <div className={styles.tagInputRow}>
           <Input
             value={tagInput}
             onChange={e => setTagInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleAddTag()}
             placeholder="Add tag"
-            className="h-8"
+            className={styles.tagInput}
           />
-          <Button variant="secondary" size="sm" onClick={handleAddTag} className="h-8">
+          <Button variant="secondary" size="sm" onClick={handleAddTag} className={styles.tagAddButton}>
             Add
           </Button>
         </div>
       </div>
 
-      <div className="text-xs text-muted-foreground space-y-1 pt-2 border-t">
+      <div className={styles.metaFooter}>
         <p>ViewBox: {icon.viewBox}</p>
         <p>Size: {icon.width} x {icon.height}</p>
       </div>

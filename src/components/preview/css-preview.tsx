@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Copy, Check } from 'lucide-react';
+import styles from './css-preview.module.css';
 
 interface CssPreviewProps {
   css: string;
@@ -19,18 +20,16 @@ export function CssPreview({ css }: CssPreviewProps) {
   }, [css]);
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between px-4 py-2 border-b">
-        <h3 className="font-medium text-sm">Generated CSS</h3>
+    <div className={styles.panel}>
+      <div className={styles.header}>
+        <h3 className={styles.title}>Generated CSS</h3>
         <Button variant="ghost" size="sm" onClick={handleCopy}>
-          {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+          {copied ? <Check className={styles.icon} /> : <Copy className={styles.icon} />}
           {copied ? 'Copied' : 'Copy'}
         </Button>
       </div>
-      <ScrollArea className="flex-1">
-        <pre className="p-4 text-xs font-mono whitespace-pre-wrap text-muted-foreground">
-          {css}
-        </pre>
+      <ScrollArea>
+        <pre className={styles.code}>{css}</pre>
       </ScrollArea>
     </div>
   );

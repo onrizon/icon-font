@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { applyTransform, getDefaultTransform } from '@/lib/svg-processing/svg-transformer';
 import type { IconGlyph, Transform } from '@/types';
+import styles from './transform-panel.module.css';
 
 interface TransformPanelProps {
   icon: IconGlyph;
@@ -32,9 +33,6 @@ function buildSvgContent(pathData: string, viewBox: string): string {
 </svg>`;
 }
 
-// Bake the existing <g transform="translate(...)"> offset (left over from the
-// normalizer for non-square source viewBoxes) plus any uncommitted pending
-// scale / drag into pathData, returning a clean path in pure viewBox coords.
 function bakeIntoPath(
   icon: IconGlyph,
   pendingScale: number,
@@ -141,21 +139,21 @@ export function TransformPanel({
   }, [icon, pendingScale, pendingTranslate, canvasContentPx, onUpdate, onResetPending]);
 
   return (
-    <div className="p-4 space-y-4 border-t">
-      <h3 className="font-medium text-sm">Transform</h3>
+    <div className={styles.panel}>
+      <h3 className={styles.heading}>Transform</h3>
 
-      <div className="space-y-3">
-        <Label className="text-xs">Rotate</Label>
-        <div className="flex items-center gap-1">
-          <Button variant="outline" size="sm" className="h-8" onClick={() => handleRotate(-90)}>
-            <RotateCcw className="h-4 w-4 mr-1" />
+      <div className={styles.section}>
+        <Label className={styles.label}>Rotate</Label>
+        <div className={styles.buttonRow}>
+          <Button variant="outline" size="sm" className={styles.button} onClick={() => handleRotate(-90)}>
+            <RotateCcw className={styles.buttonIcon} />
             -90°
           </Button>
-          <Button variant="outline" size="sm" className="h-8" onClick={() => handleRotate(90)}>
-            <RotateCw className="h-4 w-4 mr-1" />
+          <Button variant="outline" size="sm" className={styles.button} onClick={() => handleRotate(90)}>
+            <RotateCw className={styles.buttonIcon} />
             90°
           </Button>
-          <Button variant="outline" size="sm" className="h-8" onClick={() => handleRotate(180)}>
+          <Button variant="outline" size="sm" className={styles.button} onClick={() => handleRotate(180)}>
             180°
           </Button>
         </div>
@@ -163,15 +161,15 @@ export function TransformPanel({
 
       <Separator />
 
-      <div className="space-y-3">
-        <Label className="text-xs">Flip</Label>
-        <div className="flex items-center gap-1">
-          <Button variant="outline" size="sm" className="h-8" onClick={handleFlipH}>
-            <FlipHorizontal2 className="h-4 w-4 mr-1" />
+      <div className={styles.section}>
+        <Label className={styles.label}>Flip</Label>
+        <div className={styles.buttonRow}>
+          <Button variant="outline" size="sm" className={styles.button} onClick={handleFlipH}>
+            <FlipHorizontal2 className={styles.buttonIcon} />
             Horizontal
           </Button>
-          <Button variant="outline" size="sm" className="h-8" onClick={handleFlipV}>
-            <FlipVertical2 className="h-4 w-4 mr-1" />
+          <Button variant="outline" size="sm" className={styles.button} onClick={handleFlipV}>
+            <FlipVertical2 className={styles.buttonIcon} />
             Vertical
           </Button>
         </div>
@@ -179,27 +177,27 @@ export function TransformPanel({
 
       <Separator />
 
-      <div className="space-y-3">
-        <Label className="text-xs">Center</Label>
-        <div className="flex items-center gap-1">
+      <div className={styles.section}>
+        <Label className={styles.label}>Center</Label>
+        <div className={styles.buttonRow}>
           <Button
             variant="outline"
             size="sm"
-            className="h-8"
+            className={styles.button}
             onClick={() => handleCenter('horizontal')}
             title="Center horizontally within the viewBox"
           >
-            <AlignHorizontalJustifyCenter className="h-4 w-4 mr-1" />
+            <AlignHorizontalJustifyCenter className={styles.buttonIcon} />
             Horizontal
           </Button>
           <Button
             variant="outline"
             size="sm"
-            className="h-8"
+            className={styles.button}
             onClick={() => handleCenter('vertical')}
             title="Center vertically within the viewBox"
           >
-            <AlignVerticalJustifyCenter className="h-4 w-4 mr-1" />
+            <AlignVerticalJustifyCenter className={styles.buttonIcon} />
             Vertical
           </Button>
         </div>
@@ -207,10 +205,10 @@ export function TransformPanel({
 
       <Separator />
 
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Label className="text-xs">Scale</Label>
-          <span className="text-xs text-muted-foreground">{Math.round(pendingScale * 100)}%</span>
+      <div className={styles.section}>
+        <div className={styles.scaleHeader}>
+          <Label className={styles.label}>Scale</Label>
+          <span className={styles.scaleValue}>{Math.round(pendingScale * 100)}%</span>
         </div>
         <Slider
           value={[pendingScale]}
@@ -218,7 +216,7 @@ export function TransformPanel({
           min={0.1}
           max={2}
           step={0.05}
-          className="w-full"
+          className={styles.slider}
         />
       </div>
     </div>

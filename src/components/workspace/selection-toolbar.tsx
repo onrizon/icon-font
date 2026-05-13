@@ -1,19 +1,20 @@
 'use client';
 
-import { useState } from 'react';
-import { useWorkspaceStore } from '@/stores/workspace-store';
-import { useIconStore } from '@/stores/icon-store';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
+  DialogClose,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogClose,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog';
-import { Trash2, Edit, CheckSquare, XSquare } from 'lucide-react';
+import { useIconStore } from '@/stores/icon-store';
+import { useWorkspaceStore } from '@/stores/workspace-store';
+import { CheckSquare, Edit, Trash2, XSquare } from 'lucide-react';
+import { useState } from 'react';
+import styles from './selection-toolbar.module.css';
 
 export function SelectionToolbar() {
   const { selectedIds, clearSelection, selectAll, setEditingIconId } = useWorkspaceStore();
@@ -41,25 +42,25 @@ export function SelectionToolbar() {
   };
 
   return (
-    <div className="flex items-center gap-2 rounded-lg bg-muted px-4 py-2">
-      <span className="text-sm font-medium">{count} selected</span>
-      <div className="flex items-center gap-1 ml-2">
-        <Button variant="ghost" size="sm" onClick={handleSelectAll}>
-          <CheckSquare className="h-4 w-4 mr-1" />
+    <div className={styles.toolbar}>
+      <span className={styles.count}>{count} selected</span>
+      <div className={styles.actions}>
+        <Button variant="outline" size="sm" onClick={handleSelectAll}>
+          <CheckSquare className={styles.actionIcon} />
           All
         </Button>
-        <Button variant="ghost" size="sm" onClick={clearSelection}>
-          <XSquare className="h-4 w-4 mr-1" />
+        <Button variant="outline" size="sm" onClick={clearSelection}>
+          <XSquare className={styles.actionIcon} />
           None
         </Button>
         {count === 1 && (
-          <Button variant="ghost" size="sm" onClick={handleEdit}>
-            <Edit className="h-4 w-4 mr-1" />
+          <Button variant="outline" size="sm" onClick={handleEdit}>
+            <Edit className={styles.actionIcon} />
             Edit
           </Button>
         )}
-        <Button variant="ghost" size="sm" onClick={() => setConfirmOpen(true)} className="text-destructive hover:text-destructive">
-          <Trash2 className="h-4 w-4 mr-1" />
+        <Button variant="outline" size="sm" onClick={() => setConfirmOpen(true)} className={styles.deleteButton}>
+          <Trash2 className={styles.actionIcon} />
           Delete
         </Button>
       </div>

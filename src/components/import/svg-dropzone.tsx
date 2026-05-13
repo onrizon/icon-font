@@ -3,7 +3,8 @@
 import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import clsx from 'clsx';
+import styles from './svg-dropzone.module.css';
 
 interface SvgDropzoneProps {
   onFilesAccepted: (files: File[]) => void;
@@ -33,15 +34,15 @@ export function SvgDropzone({ onFilesAccepted, importing, compact }: SvgDropzone
     return (
       <div
         {...getRootProps()}
-        className={cn(
-          'flex items-center gap-2 rounded-lg border-2 border-dashed px-4 py-3 cursor-pointer transition-colors',
-          isDragActive ? 'border-primary bg-primary/5' : 'border-muted-foreground/25 hover:border-primary/50',
-          importing && 'opacity-50 cursor-not-allowed'
+        className={clsx(
+          styles.compact,
+          isDragActive && styles.compactActive,
+          importing && styles.compactDisabled
         )}
       >
         <input {...getInputProps()} />
-        <Upload className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">
+        <Upload className={styles.compactIcon} />
+        <span className={styles.compactText}>
           {importing ? 'Importing...' : 'Drop SVGs or click to import'}
         </span>
       </div>
@@ -51,18 +52,18 @@ export function SvgDropzone({ onFilesAccepted, importing, compact }: SvgDropzone
   return (
     <div
       {...getRootProps()}
-      className={cn(
-        'flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-12 cursor-pointer transition-all',
-        isDragActive ? 'border-primary bg-primary/5 scale-[1.01]' : 'border-muted-foreground/25 hover:border-primary/50',
-        importing && 'opacity-50 cursor-not-allowed'
+      className={clsx(
+        styles.full,
+        isDragActive && styles.fullActive,
+        importing && styles.fullDisabled
       )}
     >
       <input {...getInputProps()} />
-      <Upload className="h-10 w-10 text-muted-foreground mb-4" />
-      <h3 className="text-lg font-medium mb-1">
+      <Upload className={styles.fullIcon} />
+      <h3 className={styles.fullTitle}>
         {isDragActive ? 'Drop SVG files here' : 'Import SVG Icons'}
       </h3>
-      <p className="text-sm text-muted-foreground">
+      <p className={styles.fullSubtitle}>
         {importing ? 'Processing...' : 'Drag & drop SVG files, or click to browse'}
       </p>
     </div>

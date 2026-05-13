@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Copy, Check } from 'lucide-react';
+import styles from './usage-examples.module.css';
 
 interface UsageExamplesProps {
   prefix: string;
@@ -21,14 +22,14 @@ function CopyBlock({ label, code }: { label: string; code: string }) {
   }, [code]);
 
   return (
-    <div className="rounded-lg border">
-      <div className="flex items-center justify-between px-3 py-1.5 border-b bg-muted/50">
-        <span className="text-xs font-medium">{label}</span>
-        <Button variant="ghost" size="sm" className="h-6 px-2" onClick={handleCopy}>
-          {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+    <div className={styles.block}>
+      <div className={styles.blockHeader}>
+        <span className={styles.blockLabel}>{label}</span>
+        <Button variant="ghost" size="sm" className={styles.copyButton} onClick={handleCopy}>
+          {copied ? <Check className={styles.icon} /> : <Copy className={styles.icon} />}
         </Button>
       </div>
-      <pre className="p-3 text-xs font-mono whitespace-pre-wrap">{code}</pre>
+      <pre className={styles.code}>{code}</pre>
     </div>
   );
 }
@@ -63,9 +64,9 @@ function Icon({ name }: { name: string }) {
 <Icon name="${sampleName}" />`;
 
   return (
-    <ScrollArea className="h-full">
-      <div className="p-4 space-y-4">
-        <h3 className="font-medium text-sm">Usage Examples</h3>
+    <ScrollArea>
+      <div className={styles.inner}>
+        <h3 className={styles.heading}>Usage Examples</h3>
         <CopyBlock label="HTML" code={htmlUsage} />
         <CopyBlock label="CSS" code={cssUsage} />
         <CopyBlock label="React" code={reactUsage} />

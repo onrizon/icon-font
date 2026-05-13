@@ -1,69 +1,62 @@
 'use client';
 
-import { cn } from '@/lib/utils';
-import { useWorkspaceStore } from '@/stores/workspace-store';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { LayoutGrid, Edit, Eye, Package, Settings, PanelLeftClose, PanelLeft } from 'lucide-react';
+import { useWorkspaceStore } from '@/stores/workspace-store';
 import type { EditorTab } from '@/types';
+import clsx from 'clsx';
+import { Edit, Eye, LayoutGrid, Package, PanelLeft, PanelLeftClose, Settings } from 'lucide-react';
+import styles from './sidebar.module.css';
 
 const navItems: { tab: EditorTab; icon: React.ReactNode; label: string }[] = [
-  { tab: 'icons', icon: <LayoutGrid className="h-4 w-4" />, label: 'Icons' },
-  { tab: 'editor', icon: <Edit className="h-4 w-4" />, label: 'Editor' },
-  { tab: 'preview', icon: <Eye className="h-4 w-4" />, label: 'Preview' },
-  { tab: 'generate', icon: <Package className="h-4 w-4" />, label: 'Generate' },
+  { tab: 'icons', icon: <LayoutGrid />, label: 'Icons' },
+  { tab: 'editor', icon: <Edit />, label: 'Editor' },
+  { tab: 'preview', icon: <Eye />, label: 'Preview' },
+  { tab: 'generate', icon: <Package />, label: 'Generate' },
 ];
 
 export function Sidebar() {
   const { activeTab, setActiveTab, sidebarOpen, setSidebarOpen } = useWorkspaceStore();
 
   return (
-    <div
-      className={cn(
-        'border-r bg-muted/30 flex flex-col transition-all shrink-0',
-        sidebarOpen ? 'w-48' : 'w-12'
-      )}
-    >
-      <div className="flex items-center justify-end p-2">
+    <div className={clsx(styles.sidebar, sidebarOpen ? styles.open : styles.closed)}>
+      <div className={styles.toggle}>
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
-          className="h-8 w-8 p-0"
+          className={styles.toggleButton}
           onClick={() => setSidebarOpen(!sidebarOpen)}
         >
-          {sidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeft className="h-4 w-4" />}
+          {sidebarOpen ? <PanelLeftClose /> : <PanelLeft />}
         </Button>
       </div>
 
-      <nav className="flex-1 px-2 space-y-1">
+      <nav className={styles.nav}>
         {navItems.map(item => (
           <Button
             key={item.tab}
-            variant={activeTab === item.tab ? 'secondary' : 'ghost'}
+            variant={activeTab === item.tab ? 'secondary' : 'outline'}
             size="sm"
-            className={cn(
-              'w-full justify-start',
-              !sidebarOpen && 'justify-center px-0'
-            )}
+            className={sidebarOpen ? styles.navButton : styles.navButtonCollapsed}
             onClick={() => setActiveTab(item.tab)}
           >
             {item.icon}
-            {sidebarOpen && <span className="ml-2">{item.label}</span>}
+            {sidebarOpen && <span className={styles.navLabel}>{item.label}</span>}
           </Button>
         ))}
       </nav>
 
       <Separator />
 
-      <div className="p-2">
+      <div className={styles.footer}>
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
-          className={cn('w-full justify-start', !sidebarOpen && 'justify-center px-0')}
+          className={sidebarOpen ? styles.navButton : styles.navButtonCollapsed}
           onClick={() => setActiveTab('preview')}
         >
-          <Settings className="h-4 w-4" />
-          {sidebarOpen && <span className="ml-2">Settings</span>}
+          <Settings />
+          {sidebarOpen && <span className={styles.navLabel}>Settings</span>}
         </Button>
       </div>
     </div>

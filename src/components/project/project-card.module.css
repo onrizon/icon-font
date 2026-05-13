@@ -1,0 +1,104 @@
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background-color: var(--card);
+  padding: 1.25rem;
+  min-height: 160px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.card:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.headerRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.headerText {
+  min-width: 0;
+  flex: 1;
+}
+
+.title {
+  font-weight: 500;
+  font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meta {
+  margin-top: 0.375rem;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+}
+
+.fontBadge {
+  font-size: 0.75rem;
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+
+.iconCount {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.menuButton {
+  height: 2rem;
+  width: 2rem;
+  padding: 0;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.card:hover .menuButton,
+.menuButton:focus,
+.menuButton[data-state="open"] {
+  opacity: 1;
+}
+
+.menuIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.footer {
+  margin-top: auto;
+  padding-top: 1rem;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.destructiveItem {
+  color: var(--destructive);
+}
+
+.destructiveItem:focus {
+  color: var(--destructive);
+}
+
+.itemIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.deleteText {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}

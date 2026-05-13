@@ -14,6 +14,7 @@ import { useIconStore } from '@/stores/icon-store';
 import { useProjectStore } from '@/stores/project-store';
 import { Download, Loader2, Package } from 'lucide-react';
 import { useCallback, useState } from 'react';
+import styles from './generate-panel.module.css';
 
 export function GeneratePanel() {
   const icons = useIconStore(s => s.icons);
@@ -63,45 +64,44 @@ export function GeneratePanel() {
   if (!project) return null;
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Generate controls */}
-      <div className="p-4 border-b space-y-4">
-        <div className="flex items-center gap-3">
+    <div className={styles.panel}>
+      <div className={styles.controls}>
+        <div className={styles.headerRow}>
           <Button onClick={handleGenerate} disabled={generating || icons.length === 0}>
             {generating ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <Loader2 className={styles.spinner} />
             ) : (
-              <Package className="h-4 w-4 mr-2" />
+              <Package className={styles.headerIcon} />
             )}
             {generating ? 'Generating...' : 'Generate Font'}
           </Button>
-          <span className="text-sm text-muted-foreground">{icons.length} icons</span>
+          <span className={styles.count}>{icons.length} icons</span>
         </div>
 
         {(error || downloadError) && (
-          <p className="text-sm text-destructive">{error || downloadError}</p>
+          <p className={styles.error}>{error || downloadError}</p>
         )}
 
         <Separator />
 
-        <div className="space-y-3">
-          <h4 className="text-sm font-medium">Export Options</h4>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex items-center gap-2">
+        <div className={styles.section}>
+          <h4 className={styles.sectionTitle}>Export Options</h4>
+          <div className={styles.optionsGrid}>
+            <div className={styles.option}>
               <Switch id="ttf" checked={includeTTF} onCheckedChange={setIncludeTTF} />
-              <Label htmlFor="ttf" className="text-sm">TTF</Label>
+              <Label htmlFor="ttf" className={styles.optionLabel}>TTF</Label>
             </div>
-            <div className="flex items-center gap-2">
+            <div className={styles.option}>
               <Switch id="woff2" checked={includeWOFF2} onCheckedChange={setIncludeWOFF2} />
-              <Label htmlFor="woff2" className="text-sm">WOFF2</Label>
+              <Label htmlFor="woff2" className={styles.optionLabel}>WOFF2</Label>
             </div>
-            <div className="flex items-center gap-2">
+            <div className={styles.option}>
               <Switch id="css" checked={includeCSS} onCheckedChange={setIncludeCSS} />
-              <Label htmlFor="css" className="text-sm">CSS</Label>
+              <Label htmlFor="css" className={styles.optionLabel}>CSS</Label>
             </div>
-            <div className="flex items-center gap-2">
+            <div className={styles.option}>
               <Switch id="html" checked={includeHTML} onCheckedChange={setIncludeHTML} />
-              <Label htmlFor="html" className="text-sm">Demo HTML</Label>
+              <Label htmlFor="html" className={styles.optionLabel}>Demo HTML</Label>
             </div>
           </div>
         </div>
@@ -109,9 +109,9 @@ export function GeneratePanel() {
         {result && (
           <>
             <Separator />
-            <div className="flex flex-wrap gap-2">
+            <div className={styles.downloadRow}>
               <Button variant="default" size="sm" onClick={handleDownloadZip}>
-                <Download className="h-4 w-4 mr-1" />
+                <Download className={styles.downloadIcon} />
                 Download ZIP
               </Button>
               <Button variant="outline" size="sm" onClick={() => handleDownloadFormat('ttf')}>
@@ -128,22 +128,21 @@ export function GeneratePanel() {
         )}
       </div>
 
-      {/* Preview tabs */}
       {result && (
-        <div className="flex-1 overflow-hidden">
-          <Tabs defaultValue="preview" className="h-full flex flex-col">
-            <TabsList className="mx-4 mt-2">
+        <div className={styles.previewBody}>
+          <Tabs defaultValue="preview" className={styles.tabs}>
+            <TabsList className={styles.tabsList}>
               <TabsTrigger value="preview">Preview</TabsTrigger>
               <TabsTrigger value="css">CSS</TabsTrigger>
               <TabsTrigger value="usage">Usage</TabsTrigger>
             </TabsList>
-            <TabsContent value="preview" className="flex-1 overflow-hidden mt-0">
+            <TabsContent value="preview" className={styles.tabsContent}>
               <FontPreview result={result} icons={icons} fontFamily={project.fontFamily} />
             </TabsContent>
-            <TabsContent value="css" className="flex-1 overflow-hidden mt-0">
+            <TabsContent value="css" className={styles.tabsContent}>
               <CssPreview css={result.css} />
             </TabsContent>
-            <TabsContent value="usage" className="flex-1 overflow-hidden mt-0">
+            <TabsContent value="usage" className={styles.tabsContent}>
               <UsageExamples
                 prefix={project.prefix}
                 fontFamily={project.fontFamily}
