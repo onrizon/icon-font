@@ -42,7 +42,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .page {
@@ -54,7 +56,6 @@
 .body {
   display: flex;
   flex: 1;
-  overflow: hidden;
 }
 
 .main {
