@@ -7,21 +7,28 @@ import { applyTransform, getDefaultTransform } from '@/lib/svg-processing/svg-tr
 import { useIconStore } from '@/stores/icon-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import type { IconGlyph } from '@/types';
-import { ArrowLeft, Loader2, Move, RotateCcw, Save } from 'lucide-react';
+import { ArrowLeft, Grid3X3, Loader2, Move, RotateCcw, Save, ZoomIn, ZoomOut } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import styles from './icon-editor.module.css';
 import { IconProperties } from './icon-properties';
 import { TransformPanel } from './transform-panel';
 
-const CANVAS_PADDING_PX = 16;
 const CANVAS_MIN_PX = 128;
-const CANVAS_MAX_PX = 768;
-const CANVAS_DEFAULT_PX = 256;
+const CANVAS_MAX_PX = 1024;
+const CANVAS_DEFAULT_PX = 512;
+
+const ZOOM_MIN = 0.25;
+const ZOOM_MAX = 4;
+const ZOOM_STEP = 0.25;
 
 export function IconEditor() {
   const editingIconId = useWorkspaceStore(s => s.editingIconId);
   const icons = useIconStore(s => s.icons);
   const savedIcon = icons.find(i => i.id === editingIconId);
+  // Grid + zoom state live here (not in EditorBody) so they persist when
+  // switching between icons — EditorBody is keyed by savedIcon.id and remounts.
+  const [showGridTemplate, setShowGridTemplate] = useState(false);
+  const [viewZoom, setViewZoom] = useState(1);
 
   if (!savedIcon) {
     return (
@@ -32,10 +39,31 @@ export function IconEditor() {
     );
   }
 
-  return <EditorBody key={savedIcon.id} savedIcon={savedIcon} />;
+  return (
+    <EditorBody
+      key={savedIcon.id}
+      savedIcon={savedIcon}
+      showGridTemplate={showGridTemplate}
+      onToggleGridTemplate={() => setShowGridTemplate(v => !v)}
+      viewZoom={viewZoom}
+      onViewZoomChange={setViewZoom}
+    />
+  );
 }
 
-function EditorBody({ savedIcon }: { savedIcon: IconGlyph }) {
+function EditorBody({
+  savedIcon,
+  showGridTemplate,
+  onToggleGridTemplate,
+  viewZoom,
+  onViewZoomChange,
+}: {
+  savedIcon: IconGlyph;
+  showGridTemplate: boolean;
+  onToggleGridTemplate: () => void;
+  viewZoom: number;
+  onViewZoomChange: (next: number) => void;
+}) {
   const setEditingIconId = useWorkspaceStore(s => s.setEditingIconId);
   const updateIcon = useIconStore(s => s.updateIcon);
 
@@ -49,7 +77,7 @@ function EditorBody({ savedIcon }: { savedIcon: IconGlyph }) {
   const [canvasWidth, setCanvasWidth] = useState(CANVAS_DEFAULT_PX);
   const [canvasHeight, setCanvasHeight] = useState(CANVAS_DEFAULT_PX);
 
-  const canvasContentPx = Math.min(canvasWidth, canvasHeight) - CANVAS_PADDING_PX * 2;
+  const canvasContentPx = Math.min(canvasWidth, canvasHeight) * viewZoom;
 
   const clampCanvas = (v: number) =>
     Math.min(CANVAS_MAX_PX, Math.max(CANVAS_MIN_PX, Math.round(v) || CANVAS_DEFAULT_PX));
@@ -187,6 +215,16 @@ function EditorBody({ savedIcon }: { savedIcon: IconGlyph }) {
     return parts.length > 0 ? parts.join(' ') : undefined;
   }, [pendingScale, pendingTranslate]);
 
+  const zoomIn = useCallback(
+    () => onViewZoomChange(Math.min(ZOOM_MAX, Number((viewZoom + ZOOM_STEP).toFixed(2)))),
+    [viewZoom, onViewZoomChange]
+  );
+  const zoomOut = useCallback(
+    () => onViewZoomChange(Math.max(ZOOM_MIN, Number((viewZoom - ZOOM_STEP).toFixed(2)))),
+    [viewZoom, onViewZoomChange]
+  );
+  const resetZoom = useCallback(() => onViewZoomChange(1), [onViewZoomChange]);
+
   return (
     <div className={styles.editor}>
       <div className={styles.headerBar}>
@@ -231,6 +269,16 @@ function EditorBody({ savedIcon }: { savedIcon: IconGlyph }) {
               <Move className={styles.dragIcon} />
               Drag
             </Button>
+            <Button
+              variant={showGridTemplate ? 'default' : 'outline'}
+              size="sm"
+              className={styles.dragButton}
+              onClick={onToggleGridTemplate}
+              title="Toggle design grid template"
+            >
+              <Grid3X3 className={styles.dragIcon} />
+              Grid
+            </Button>
             <div className={styles.sizeInputs}>
               <Label htmlFor="canvas-w" className={styles.sizeLabel}>W</Label>
               <Input
@@ -255,30 +303,80 @@ function EditorBody({ savedIcon }: { savedIcon: IconGlyph }) {
                 className={styles.sizeInput}
               />
             </div>
+            <div className={styles.zoomControls}>
+              <Button
+                variant="outline"
+                size="sm"
+                className={styles.dragButton}
+                onClick={zoomOut}
+                disabled={viewZoom <= ZOOM_MIN}
+                title="Zoom out"
+              >
+                <ZoomOut className={styles.dragIcon} />
+              </Button>
+              <button
+                type="button"
+                className={styles.zoomDisplay}
+                onClick={resetZoom}
+                title="Reset zoom to 100%"
+              >
+                {Math.round(viewZoom * 100)}%
+              </button>
+              <Button
+                variant="outline"
+                size="sm"
+                className={styles.dragButton}
+                onClick={zoomIn}
+                disabled={viewZoom >= ZOOM_MAX}
+                title="Zoom in"
+              >
+                <ZoomIn className={styles.dragIcon} />
+              </Button>
+            </div>
           </div>
 
           <div
             className={styles.canvas}
             style={{
-              width: canvasWidth,
-              height: canvasHeight,
-              backgroundImage: [
-                'linear-gradient(45deg, #d1d5db 25%, transparent 25%)',
-                'linear-gradient(-45deg, #d1d5db 25%, transparent 25%)',
-                'linear-gradient(45deg, transparent 75%, #d1d5db 75%)',
-                'linear-gradient(-45deg, transparent 75%, #d1d5db 75%)',
-              ].join(', '),
-              backgroundSize: '16px 16px',
-              backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0px',
-              backgroundColor: '#f9fafb',
+              width: canvasWidth * viewZoom,
+              height: canvasHeight * viewZoom,
               cursor: dragMode ? (isDragging ? 'grabbing' : 'grab') : 'default',
             }}
             onMouseDown={handleCanvasMouseDown}
           >
-            <svg className={styles.crosshair} xmlns="http://www.w3.org/2000/svg">
-              <line x1="50%" y1="0" x2="50%" y2="100%" stroke="var(--border)" strokeWidth="1" strokeDasharray="4" />
-              <line x1="0" y1="50%" x2="100%" y2="50%" stroke="var(--border)" strokeWidth="1" strokeDasharray="4" />
-            </svg>
+            {showGridTemplate ? (
+              <svg
+                className={styles.crosshair}
+                viewBox="0 0 100 100"
+                preserveAspectRatio="xMidYMid meet"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                {/* 4×4 cell grid (lines at 25/50/75%) */}
+                <g stroke="#d1d5db" strokeWidth="1" opacity="0.9">
+                  <line x1="25" y1="0" x2="25" y2="100" />
+                  <line x1="50" y1="0" x2="50" y2="100" />
+                  <line x1="75" y1="0" x2="75" y2="100" />
+                  <line x1="0" y1="25" x2="100" y2="25" />
+                  <line x1="0" y1="50" x2="100" y2="50" />
+                  <line x1="0" y1="75" x2="100" y2="75" />
+                </g>
+                {/* Concentric construction circles */}
+                <g stroke="#f3a3a3" strokeWidth="1" fill="none" opacity="0.9">
+                  <circle cx="50" cy="50" r="48" />
+                  <circle cx="50" cy="50" r="22" />
+                </g>
+                {/* Diagonal cross */}
+                <g stroke="#a3c9f3" strokeWidth="1" opacity="0.9">
+                  <line x1="0" y1="0" x2="100" y2="100" />
+                  <line x1="100" y1="0" x2="0" y2="100" />
+                </g>
+              </svg>
+            ) : (
+              <svg className={styles.crosshair} xmlns="http://www.w3.org/2000/svg">
+                <line x1="50%" y1="0" x2="50%" y2="100%" stroke="var(--border)" strokeWidth="1" strokeDasharray="4" />
+                <line x1="0" y1="50%" x2="100%" y2="50%" stroke="var(--border)" strokeWidth="1" strokeDasharray="4" />
+              </svg>
+            )}
 
             <div
               className={styles.iconWrap}

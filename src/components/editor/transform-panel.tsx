@@ -1,20 +1,20 @@
 'use client';
 
-import { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Slider } from '@/components/ui/slider';
+import { applyTransform, getDefaultTransform } from '@/lib/svg-processing/svg-transformer';
+import type { IconGlyph, Transform } from '@/types';
 import {
-  RotateCw,
+  AlignHorizontalJustifyCenter,
+  AlignVerticalJustifyCenter,
   FlipHorizontal2,
   FlipVertical2,
   RotateCcw,
-  AlignHorizontalJustifyCenter,
-  AlignVerticalJustifyCenter,
+  RotateCw,
 } from 'lucide-react';
-import { applyTransform, getDefaultTransform } from '@/lib/svg-processing/svg-transformer';
-import type { IconGlyph, Transform } from '@/types';
+import { useCallback } from 'react';
 import styles from './transform-panel.module.css';
 
 interface TransformPanelProps {
@@ -215,7 +215,7 @@ export function TransformPanel({
           onValueChange={([v]) => onScaleChange(v)}
           min={0.1}
           max={2}
-          step={0.05}
+          step={0.01}
           className={styles.slider}
         />
       </div>

@@ -99,12 +99,48 @@
   font-size: 0.75rem;
 }
 
+.zoomControls {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.zoomDisplay {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  background-color: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  padding: 0 0.5rem;
+  height: 1.75rem;
+  min-width: 3.5rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.zoomDisplay:hover {
+  background-color: var(--muted);
+  color: var(--foreground);
+}
+
 .canvas {
-  position: relative;
-  border-radius: var(--radius-lg);
+  background-color: #f9fafb;
+  background-image:
+    linear-gradient(45deg, rgba(209, 213, 219, 0.5) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(209, 213, 219, 0.5) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(209, 213, 219, 0.5) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(209, 213, 219, 0.5) 75%);
+  background-size: 16px 16px;
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0px;
   border: 1px solid var(--border);
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   overflow: hidden;
+  position: relative;
   user-select: none;
 }
 
@@ -118,6 +154,7 @@
 
 .iconWrap {
   position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
