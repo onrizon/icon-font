@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2, Type } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Logo } from '@/components/layout/logo';
 import { useAuth } from '@/hooks/use-auth';
 import styles from '@/app/styles/login.module.css';
 
@@ -41,7 +42,7 @@ export default function LoginPage() {
     <div className={styles.container}>
       <div className={styles.card}>
         <div className={styles.brand}>
-          <Type className={styles.brandIcon} />
+          <Logo className={styles.brandIcon} />
           <h1 className={styles.brandTitle}>Icon Font Generator</h1>
         </div>
         <p className={styles.subtitle}>

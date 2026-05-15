@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Type, FolderOpen, LayoutGrid, Download } from 'lucide-react';
+import { FolderOpen, LayoutGrid, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Logo } from '@/components/layout/logo';
 import { ProjectSwitcher } from '@/components/project/project-switcher';
 import { OpenFontDialog } from '@/components/import/open-font-dialog';
 import { useWorkspaceStore } from '@/stores/workspace-store';
@@ -27,7 +28,7 @@ export function Header() {
   return (
     <header className={styles.header}>
       <Link href="/projects" className={styles.brand}>
-        <Type className={styles.brandIcon} />
+        <Logo className={styles.brandIcon} />
         <h1 className={styles.brandTitle}>Icon Font Generator</h1>
       </Link>
       <Button asChild variant="ghost" size="sm" className={styles.button}>
