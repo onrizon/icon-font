@@ -4,7 +4,7 @@ import { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Copy, Check } from 'lucide-react';
-import styles from './css-preview.module.css';
+import styles from '@/app/styles/css-preview.module.css';
 
 interface CssPreviewProps {
   css: string;

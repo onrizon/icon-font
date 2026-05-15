@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2, Type } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
-import styles from './page.module.css';
+import styles from '@/app/styles/login.module.css';
 
 export default function LoginPage() {
   const router = useRouter();

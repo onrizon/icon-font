@@ -4,7 +4,7 @@ import * as React from "react"
 import { Tabs as TabsPrimitive } from "radix-ui"
 import clsx from "clsx"
 
-import styles from "./tabs.module.css"
+import styles from '@/app/styles/tabs.module.css'
 
 export type TabsListVariant = "default" | "line"
 

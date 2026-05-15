@@ -9,7 +9,7 @@ import { exportProject, importProject } from '@/lib/export/json-export';
 import { useProjectStore } from '@/stores/project-store';
 import { Download, Upload } from 'lucide-react';
 import { useCallback, useRef } from 'react';
-import styles from './project-settings.module.css';
+import styles from '@/app/styles/project-settings.module.css';
 
 export function ProjectSettings() {
   const { currentProject, currentProjectId, updateProject, updateFontSettings, loadProjects } = useProjectStore();

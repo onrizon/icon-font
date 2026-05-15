@@ -4,7 +4,7 @@ import * as React from "react"
 import { Switch as SwitchPrimitive } from "radix-ui"
 import clsx from "clsx"
 
-import styles from "./switch.module.css"
+import styles from '@/app/styles/switch.module.css'
 
 function Switch({
   className,

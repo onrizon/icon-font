@@ -4,7 +4,7 @@ import * as React from "react"
 import { Tooltip as TooltipPrimitive } from "radix-ui"
 import clsx from "clsx"
 
-import styles from "./tooltip.module.css"
+import styles from '@/app/styles/tooltip.module.css'
 
 function TooltipProvider({
   delayDuration = 0,

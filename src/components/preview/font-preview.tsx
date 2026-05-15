@@ -5,7 +5,7 @@ import { formatCodepoint } from '@/lib/font-generation/codepoint-allocator';
 import type { IconGlyph } from '@/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { FontGenerationResult } from '@/hooks/use-font-generation';
-import styles from './font-preview.module.css';
+import styles from '@/app/styles/font-preview.module.css';
 
 interface FontPreviewProps {
   result: FontGenerationResult;

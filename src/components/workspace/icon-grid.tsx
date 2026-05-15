@@ -22,7 +22,7 @@ import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useIconStore } from '@/stores/icon-store';
 import { IconCard } from './icon-card';
 import type { IconGlyph, ViewMode } from '@/types';
-import styles from './icon-grid.module.css';
+import styles from '@/app/styles/icon-grid.module.css';
 
 const gridClass: Record<ViewMode, string> = {
   small: styles.gridSmall,

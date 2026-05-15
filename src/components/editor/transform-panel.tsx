@@ -15,7 +15,7 @@ import {
   RotateCw,
 } from 'lucide-react';
 import { useCallback } from 'react';
-import styles from './transform-panel.module.css';
+import styles from '@/app/styles/transform-panel.module.css';
 
 interface TransformPanelProps {
   icon: IconGlyph;

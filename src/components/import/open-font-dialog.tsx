@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import styles from './open-font-dialog.module.css';
+import styles from '@/app/styles/open-font-dialog.module.css';
 
 interface OpenFontDialogProps {
   open: boolean;

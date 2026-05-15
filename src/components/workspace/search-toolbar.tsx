@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, Grid3X3, LayoutGrid, Square } from 'lucide-react';
 import type { ViewMode } from '@/types';
-import styles from './search-toolbar.module.css';
+import styles from '@/app/styles/search-toolbar.module.css';
 
 const viewModes: { mode: ViewMode; icon: React.ReactNode; label: string }[] = [
   { mode: 'small', icon: <Grid3X3 />, label: 'Small' },

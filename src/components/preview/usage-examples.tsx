@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Copy, Check } from 'lucide-react';
-import styles from './usage-examples.module.css';
+import styles from '@/app/styles/usage-examples.module.css';
 
 interface UsageExamplesProps {
   prefix: string;

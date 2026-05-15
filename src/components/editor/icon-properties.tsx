@@ -9,7 +9,7 @@ import { X } from 'lucide-react';
 import type { IconGlyph } from '@/types';
 import { formatCodepoint } from '@/lib/font-generation/codepoint-allocator';
 import { PUA_START, PUA_END } from '@/lib/font-generation/constants';
-import styles from './icon-properties.module.css';
+import styles from '@/app/styles/icon-properties.module.css';
 
 interface IconPropertiesProps {
   icon: IconGlyph;

@@ -9,7 +9,7 @@ import { useWorkspaceStore } from '@/stores/workspace-store';
 import type { IconGlyph } from '@/types';
 import { ArrowLeft, Grid3X3, Loader2, Move, RotateCcw, Save, ZoomIn, ZoomOut } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import styles from './icon-editor.module.css';
+import styles from '@/app/styles/icon-editor.module.css';
 import { IconProperties } from './icon-properties';
 import { TransformPanel } from './transform-panel';
 

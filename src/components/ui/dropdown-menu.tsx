@@ -5,7 +5,7 @@ import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react"
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui"
 import clsx from "clsx"
 
-import styles from "./dropdown-menu.module.css"
+import styles from '@/app/styles/dropdown-menu.module.css'
 
 function DropdownMenu({
   ...props

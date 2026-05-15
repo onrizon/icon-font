@@ -4,7 +4,7 @@ import * as React from "react"
 import { Slider as SliderPrimitive } from "radix-ui"
 import clsx from "clsx"
 
-import styles from "./slider.module.css"
+import styles from '@/app/styles/slider.module.css'
 
 function Slider({
   className,

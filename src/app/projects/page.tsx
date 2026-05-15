@@ -8,7 +8,7 @@ import { useProjectStore } from '@/stores/project-store';
 import { Loader2, Type } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import styles from './page.module.css';
+import styles from '@/app/styles/projects.module.css';
 
 export default function ProjectsPage() {
   const router = useRouter();

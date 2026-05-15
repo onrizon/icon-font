@@ -4,7 +4,7 @@ import { memo, useCallback } from 'react';
 import clsx from 'clsx';
 import type { IconGlyph, ViewMode } from '@/types';
 import { formatCodepoint } from '@/lib/font-generation/codepoint-allocator';
-import styles from './icon-card.module.css';
+import styles from '@/app/styles/icon-card.module.css';
 
 interface IconCardProps {
   icon: IconGlyph;

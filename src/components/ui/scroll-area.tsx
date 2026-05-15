@@ -4,7 +4,7 @@ import * as React from "react"
 import { ScrollArea as ScrollAreaPrimitive } from "radix-ui"
 import clsx from "clsx"
 
-import styles from "./scroll-area.module.css"
+import styles from '@/app/styles/scroll-area.module.css'
 
 function ScrollArea({
   className,

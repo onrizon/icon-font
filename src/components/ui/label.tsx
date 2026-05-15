@@ -4,7 +4,7 @@ import * as React from "react"
 import { Label as LabelPrimitive } from "radix-ui"
 import clsx from "clsx"
 
-import styles from "./label.module.css"
+import styles from '@/app/styles/label.module.css'
 
 function Label({
   className,

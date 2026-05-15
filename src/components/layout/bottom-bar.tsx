@@ -3,7 +3,7 @@
 import { useIconStore } from '@/stores/icon-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useProjectStore } from '@/stores/project-store';
-import styles from './bottom-bar.module.css';
+import styles from '@/app/styles/bottom-bar.module.css';
 
 export function BottomBar() {
   const iconCount = useIconStore(s => s.icons.length);

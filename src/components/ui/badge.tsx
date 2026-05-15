@@ -2,7 +2,7 @@ import * as React from "react"
 import { Slot } from "radix-ui"
 import clsx from "clsx"
 
-import styles from "./badge.module.css"
+import styles from '@/app/styles/badge.module.css'
 
 export type BadgeVariant = "default" | "secondary" | "destructive" | "outline" | "ghost" | "link"
 

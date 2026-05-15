@@ -14,7 +14,7 @@ import { useIconStore } from '@/stores/icon-store';
 import { useProjectStore } from '@/stores/project-store';
 import { Download, Loader2, Package } from 'lucide-react';
 import { useCallback, useState } from 'react';
-import styles from './generate-panel.module.css';
+import styles from '@/app/styles/generate-panel.module.css';
 
 export function GeneratePanel() {
   const icons = useIconStore(s => s.icons);

@@ -4,7 +4,7 @@ import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload } from 'lucide-react';
 import clsx from 'clsx';
-import styles from './svg-dropzone.module.css';
+import styles from '@/app/styles/svg-dropzone.module.css';
 
 interface SvgDropzoneProps {
   onFilesAccepted: (files: File[]) => void;

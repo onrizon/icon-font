@@ -4,7 +4,7 @@ import * as React from "react"
 import { Separator as SeparatorPrimitive } from "radix-ui"
 import clsx from "clsx"
 
-import styles from "./separator.module.css"
+import styles from '@/app/styles/separator.module.css'
 
 function Separator({
   className,

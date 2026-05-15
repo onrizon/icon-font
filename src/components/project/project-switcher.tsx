@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useProjectStore } from '@/stores/project-store';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
-import styles from './project-switcher.module.css';
+import styles from '@/app/styles/project-switcher.module.css';
 
 export function ProjectSwitcher() {
   const router = useRouter();

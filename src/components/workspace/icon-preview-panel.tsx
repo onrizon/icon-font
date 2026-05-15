@@ -11,7 +11,7 @@ import { sanitizeIconName } from '@/lib/svg-processing/svg-parser';
 import { useMemo, useState } from 'react';
 import clsx from 'clsx';
 import type { IconGlyph } from '@/types';
-import styles from './icon-preview-panel.module.css';
+import styles from '@/app/styles/icon-preview-panel.module.css';
 
 function formatBytes(n: number): string {
   if (n < 1024) return `${n} B`;

@@ -10,7 +10,7 @@ import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useIconStore } from '@/stores/icon-store';
 import { useProjectStore } from '@/stores/project-store';
 import { downloadSelectedSvgs } from '@/lib/export/svg-export';
-import styles from './header.module.css';
+import styles from '@/app/styles/header.module.css';
 
 export function Header() {
   const [fontDialogOpen, setFontDialogOpen] = useState(false);

@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
-import styles from './page.module.css';
+import styles from '@/app/styles/home.module.css';
 
 export default function Home() {
   const router = useRouter();

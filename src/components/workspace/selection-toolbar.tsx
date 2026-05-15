@@ -14,7 +14,7 @@ import { useIconStore } from '@/stores/icon-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { CheckSquare, Edit, Trash2, XSquare } from 'lucide-react';
 import { useState } from 'react';
-import styles from './selection-toolbar.module.css';
+import styles from '@/app/styles/selection-toolbar.module.css';
 
 export function SelectionToolbar() {
   const { selectedIds, clearSelection, selectAll, setEditingIconId } = useWorkspaceStore();

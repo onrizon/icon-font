@@ -6,7 +6,7 @@ import { Dialog as DialogPrimitive } from "radix-ui"
 import clsx from "clsx"
 
 import { Button } from "@/components/ui/button"
-import styles from "./dialog.module.css"
+import styles from '@/app/styles/dialog.module.css'
 
 function Dialog({
   ...props

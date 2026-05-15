@@ -1,7 +1,7 @@
 import * as React from "react"
 import clsx from "clsx"
 
-import styles from "./input.module.css"
+import styles from '@/app/styles/input.module.css'
 
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (

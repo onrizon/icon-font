@@ -19,7 +19,7 @@ import { GeneratePanel } from '@/components/generate/generate-panel';
 import { ProjectSettings } from '@/components/project/project-settings';
 import { IconPreviewPanel } from '@/components/workspace/icon-preview-panel';
 import { Loader2 } from 'lucide-react';
-import styles from './page.module.css';
+import styles from '@/app/styles/workspace.module.css';
 
 function WorkspaceContent() {
   const activeTab = useWorkspaceStore(s => s.activeTab);

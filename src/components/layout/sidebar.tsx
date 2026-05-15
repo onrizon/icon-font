@@ -1,16 +1,15 @@
 'use client';
 
+import styles from '@/app/styles/sidebar.module.css';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import type { EditorTab } from '@/types';
 import clsx from 'clsx';
-import { Edit, Eye, LayoutGrid, Package, PanelLeft, PanelLeftClose, Settings } from 'lucide-react';
-import styles from './sidebar.module.css';
+import { Eye, LayoutGrid, Package, PanelLeft, PanelLeftClose, Settings } from 'lucide-react';
 
 const navItems: { tab: EditorTab; icon: React.ReactNode; label: string }[] = [
   { tab: 'icons', icon: <LayoutGrid />, label: 'Icons' },
-  { tab: 'editor', icon: <Edit />, label: 'Editor' },
   { tab: 'preview', icon: <Eye />, label: 'Preview' },
   { tab: 'generate', icon: <Package />, label: 'Generate' },
 ];
@@ -35,7 +34,7 @@ export function Sidebar() {
         {navItems.map(item => (
           <Button
             key={item.tab}
-            variant={activeTab === item.tab ? 'secondary' : 'outline'}
+            variant={activeTab === item.tab ? 'default' : 'outline'}
             size="sm"
             className={sidebarOpen ? styles.navButton : styles.navButtonCollapsed}
             onClick={() => setActiveTab(item.tab)}

@@ -22,7 +22,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import styles from './project-card.module.css';
+import styles from '@/app/styles/project-card.module.css';
 
 interface ProjectCardProps {
   project: Project;

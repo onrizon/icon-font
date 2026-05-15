@@ -13,7 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import styles from './new-project-card.module.css';
+import styles from '@/app/styles/new-project-card.module.css';
 
 interface NewProjectCardProps {
   variant?: 'card' | 'button';
