@@ -1,0 +1,36 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Does the signed-in user own the given project document?
+    // Icons don't store ownerUid, so ownership is resolved via their parent project.
+    function ownsProject(projectId) {
+      return signedIn()
+        && get(/databases/$(database)/documents/project/$(projectId)).data.ownerUid == request.auth.uid;
+    }
+
+    // Projects — owner-scoped via the `ownerUid` field. NOTE: collection is `project` (singular).
+    match /project/{projectId} {
+      allow read:   if signedIn() && resource.data.ownerUid == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if signedIn()
+                    && resource.data.ownerUid == request.auth.uid
+                    && request.resource.data.ownerUid == request.auth.uid; // cannot reassign owner
+      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // Icons — ownership is indirect via the `parent` field (the owning project id).
+    match /icons/{iconId} {
+      allow read:   if ownsProject(resource.data.parent);
+      allow create: if ownsProject(request.resource.data.parent);
+      allow update: if ownsProject(resource.data.parent)
+                    && ownsProject(request.resource.data.parent); // cannot move to a project you don't own
+      allow delete: if ownsProject(resource.data.parent);
+    }
+  }
+}

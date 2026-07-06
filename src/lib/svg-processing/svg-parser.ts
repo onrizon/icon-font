@@ -1,3 +1,5 @@
+import { SVGPathData } from 'svg-pathdata';
+
 export interface ParsedSvg {
   pathData: string;
   viewBox: string;
@@ -60,7 +62,16 @@ function extractPathData(svg: SVGElement): string {
     if (isInNonRenderingContext(path)) return;
     const d = path.getAttribute('d');
     const fill = path.getAttribute('fill');
-    if (d && fill !== 'none' && fill !== 'transparent') paths.push(d);
+    if (d && fill !== 'none' && fill !== 'transparent') {
+      // A leading relative "m" is absolute in a standalone path, but becomes
+      // truly relative once joined after another path — convert to absolute
+      // commands so the join below can't displace subsequent paths.
+      try {
+        paths.push(new SVGPathData(d).toAbs().encode());
+      } catch {
+        paths.push(d);
+      }
+    }
   });
 
   // Convert basic shapes to paths
