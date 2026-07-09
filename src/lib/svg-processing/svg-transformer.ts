@@ -62,3 +62,29 @@ export function getDefaultTransform(): Transform {
     translateY: 0,
   };
 }
+
+/**
+ * Scale a path to fill the viewBox (largest dimension edge-to-edge) and center it.
+ * Scale first, then re-center from the scaled bounds, so the final position is exact
+ * regardless of the scale pivot. Returns the original path on empty/degenerate bounds
+ * or parse error.
+ */
+export function fitPathToViewBox(pathData: string, vbW: number, vbH: number): string {
+  try {
+    const size = Math.max(vbW, vbH);
+    const b = new SVGPathData(pathData).getBounds();
+    const w = b.maxX - b.minX;
+    const h = b.maxY - b.minY;
+    if (!(w > 0) || !(h > 0)) return pathData;
+
+    const k = Math.min(vbW / w, vbH / h); // largest scale that still fits
+    const scaled = applyTransform(pathData, { ...getDefaultTransform(), scale: k }, size);
+
+    const s = new SVGPathData(scaled).getBounds();
+    const dx = (vbW - (s.maxX - s.minX)) / 2 - s.minX; // center (mirrors handleCenter math)
+    const dy = (vbH - (s.maxY - s.minY)) / 2 - s.minY;
+    return applyTransform(scaled, { ...getDefaultTransform(), translateX: dx, translateY: dy }, size);
+  } catch {
+    return pathData;
+  }
+}

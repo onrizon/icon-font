@@ -4,13 +4,17 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
-import { applyTransform, getDefaultTransform } from '@/lib/svg-processing/svg-transformer';
+import { applyTransform, getDefaultTransform, fitPathToViewBox } from '@/lib/svg-processing/svg-transformer';
+import { buildGlyphSvg } from '@/lib/svg-processing/svg-glyph';
 import type { IconGlyph, Transform } from '@/types';
 import {
   AlignHorizontalJustifyCenter,
   AlignVerticalJustifyCenter,
   FlipHorizontal2,
   FlipVertical2,
+  Maximize2,
+  Minus,
+  Plus,
   RotateCcw,
   RotateCw,
 } from 'lucide-react';
@@ -27,11 +31,9 @@ interface TransformPanelProps {
   canvasContentPx: number;
 }
 
-function buildSvgContent(pathData: string, viewBox: string): string {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}">
-  <path d="${pathData}" fill="currentColor"/>
-</svg>`;
-}
+const SCALE_STEP = 0.05; // 5% per click
+const SCALE_MIN = 0.1;
+const SCALE_MAX = 2;
 
 function bakeIntoPath(
   icon: IconGlyph,
@@ -82,7 +84,7 @@ export function TransformPanel({
     (t: Transform) => {
       const { path: baked, size } = bakeIntoPath(icon, pendingScale, pendingTranslate, canvasContentPx);
       const newPathData = applyTransform(baked, t, size);
-      onUpdate({ pathData: newPathData, svgContent: buildSvgContent(newPathData, icon.viewBox) });
+      onUpdate({ pathData: newPathData, svgContent: buildGlyphSvg(newPathData, icon.viewBox, icon.svgContent) });
       onResetPending();
     },
     [icon, pendingScale, pendingTranslate, canvasContentPx, onUpdate, onResetPending]
@@ -110,7 +112,7 @@ export function TransformPanel({
     container.style.position = 'absolute';
     container.style.left = '-99999px';
     container.style.top = '0';
-    container.innerHTML = buildSvgContent(baked, icon.viewBox);
+    container.innerHTML = buildGlyphSvg(baked, icon.viewBox, icon.svgContent);
     document.body.appendChild(container);
     const pathEl = container.querySelector('path') as SVGGraphicsElement | null;
     if (!pathEl) {
@@ -134,7 +136,22 @@ export function TransformPanel({
       translateY: dy,
     }, size);
 
-    onUpdate({ pathData: finalPath, svgContent: buildSvgContent(finalPath, icon.viewBox) });
+    onUpdate({ pathData: finalPath, svgContent: buildGlyphSvg(finalPath, icon.viewBox, icon.svgContent) });
+    onResetPending();
+  }, [icon, pendingScale, pendingTranslate, canvasContentPx, onUpdate, onResetPending]);
+
+  const handleStep = useCallback(
+    (delta: number) => {
+      const next = Math.min(SCALE_MAX, Math.max(SCALE_MIN, Math.round((pendingScale + delta) * 100) / 100));
+      onScaleChange(next);
+    },
+    [pendingScale, onScaleChange]
+  );
+
+  const handleFillArea = useCallback(() => {
+    const { path: baked, vbW, vbH } = bakeIntoPath(icon, pendingScale, pendingTranslate, canvasContentPx);
+    const fitted = fitPathToViewBox(baked, vbW, vbH);
+    onUpdate({ pathData: fitted, svgContent: buildGlyphSvg(fitted, icon.viewBox, icon.svgContent) });
     onResetPending();
   }, [icon, pendingScale, pendingTranslate, canvasContentPx, onUpdate, onResetPending]);
 
@@ -213,11 +230,43 @@ export function TransformPanel({
         <Slider
           value={[pendingScale]}
           onValueChange={([v]) => onScaleChange(v)}
-          min={0.1}
-          max={2}
+          min={SCALE_MIN}
+          max={SCALE_MAX}
           step={0.01}
           className={styles.slider}
         />
+        <div className={styles.scaleActions}>
+          <Button
+            variant="outline"
+            size="icon-sm"
+            onClick={() => handleStep(-SCALE_STEP)}
+            disabled={pendingScale <= SCALE_MIN}
+            title="Decrease scale by 5%"
+            aria-label="Decrease scale"
+          >
+            <Minus />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon-sm"
+            onClick={() => handleStep(SCALE_STEP)}
+            disabled={pendingScale >= SCALE_MAX}
+            title="Increase scale by 5%"
+            aria-label="Increase scale"
+          >
+            <Plus />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className={styles.fillButton}
+            onClick={handleFillArea}
+            title="Scale to fill and center the icon in the canvas"
+          >
+            <Maximize2 className={styles.buttonIcon} />
+            Fill area
+          </Button>
+        </div>
       </div>
     </div>
   );

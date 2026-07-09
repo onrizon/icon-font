@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { applyTransform, getDefaultTransform } from '@/lib/svg-processing/svg-transformer';
 import { processSvg } from '@/lib/svg-processing/svg-pipeline';
+import { buildGlyphSvg } from '@/lib/svg-processing/svg-glyph';
 import { useIconStore } from '@/stores/icon-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import type { IconGlyph } from '@/types';
@@ -161,7 +162,7 @@ function EditorBody({
         finalDraft = {
           ...finalDraft,
           pathData: newPathData,
-          svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${finalDraft.viewBox}">\n  <path d="${newPathData}" fill="currentColor"/>\n</svg>`,
+          svgContent: buildGlyphSvg(newPathData, finalDraft.viewBox, finalDraft.svgContent),
         };
       }
 
@@ -177,7 +178,7 @@ function EditorBody({
         finalDraft = {
           ...finalDraft,
           pathData: newPathData,
-          svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${finalDraft.viewBox}">\n  <path d="${newPathData}" fill="currentColor"/>\n</svg>`,
+          svgContent: buildGlyphSvg(newPathData, finalDraft.viewBox, finalDraft.svgContent),
         };
       }
 
