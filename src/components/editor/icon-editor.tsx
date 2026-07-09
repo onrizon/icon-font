@@ -4,11 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { applyTransform, getDefaultTransform } from '@/lib/svg-processing/svg-transformer';
+import { processSvg } from '@/lib/svg-processing/svg-pipeline';
 import { useIconStore } from '@/stores/icon-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import type { IconGlyph } from '@/types';
-import { ArrowLeft, Grid3X3, Loader2, Move, RotateCcw, Save, ZoomIn, ZoomOut } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, Grid3X3, Loader2, Move, RotateCcw, Save, Upload, ZoomIn, ZoomOut } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styles from '@/app/styles/icon-editor.module.css';
 import { IconProperties } from './icon-properties';
 import { TransformPanel } from './transform-panel';
@@ -76,6 +77,9 @@ function EditorBody({
   const [isSaving, setIsSaving] = useState(false);
   const [canvasWidth, setCanvasWidth] = useState(CANVAS_DEFAULT_PX);
   const [canvasHeight, setCanvasHeight] = useState(CANVAS_DEFAULT_PX);
+  const replaceInputRef = useRef<HTMLInputElement>(null);
+  const [replacing, setReplacing] = useState(false);
+  const [replaceError, setReplaceError] = useState<string | null>(null);
 
   const canvasContentPx = Math.min(canvasWidth, canvasHeight) * viewZoom;
 
@@ -184,6 +188,9 @@ function EditorBody({
         tags: finalDraft.tags,
         pathData: finalDraft.pathData,
         svgContent: finalDraft.svgContent,
+        viewBox: finalDraft.viewBox,
+        width: finalDraft.width,
+        height: finalDraft.height,
       });
 
       setPendingScale(1);
@@ -198,6 +205,37 @@ function EditorBody({
     setPendingScale(1);
     setPendingTranslate({ x: 0, y: 0 });
   }, [savedIcon]);
+
+  const handleReplaceFile = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // reset so re-picking the same file still fires onChange
+    if (!file) return;
+    if (!(file.name.toLowerCase().endsWith('.svg') || file.type === 'image/svg+xml')) {
+      setReplaceError('Please choose an SVG file');
+      return;
+    }
+    setReplacing(true);
+    setReplaceError(null);
+    try {
+      const processed = processSvg(await file.text(), file.name);
+      // Stage the new artwork into the draft; the user commits it with Save.
+      setDraft(prev => ({
+        ...prev,
+        svgContent: processed.displaySvg,
+        pathData: processed.pathData,
+        viewBox: processed.viewBox,
+        width: processed.width,
+        height: processed.height,
+      }));
+      // New artwork starts fresh — discard any staged scale/translate.
+      setPendingScale(1);
+      setPendingTranslate({ x: 0, y: 0 });
+    } catch (err) {
+      setReplaceError(err instanceof Error ? err.message : 'Failed to replace SVG');
+    } finally {
+      setReplacing(false);
+    }
+  }, []);
 
   const handleCanvasMouseDown = useCallback((e: React.MouseEvent) => {
     if (!dragMode) return;
@@ -237,6 +275,24 @@ function EditorBody({
           <Button
             variant="outline"
             size="sm"
+            onClick={() => replaceInputRef.current?.click()}
+            disabled={replacing || isSaving}
+            className={styles.actionButton}
+            title="Replace this icon's artwork with a new SVG"
+          >
+            {replacing ? <Loader2 className={styles.actionIcon} /> : <Upload className={styles.actionIcon} />}
+            {replacing ? 'Replacing…' : 'Replace SVG'}
+          </Button>
+          <input
+            ref={replaceInputRef}
+            type="file"
+            accept=".svg,image/svg+xml"
+            hidden
+            onChange={handleReplaceFile}
+          />
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleReset}
             disabled={!isDirty || isSaving}
             className={styles.actionButton}
@@ -255,6 +311,8 @@ function EditorBody({
           </Button>
         </div>
       </div>
+
+      {replaceError && <div className={styles.replaceError}>{replaceError}</div>}
 
       <div className={styles.body}>
         <div className={styles.canvasArea}>

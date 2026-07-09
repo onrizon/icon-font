@@ -3,9 +3,8 @@
 import { useCallback, useState } from 'react';
 import { useIconStore } from '@/stores/icon-store';
 import { getIdToken } from '@/hooks/use-auth';
-import { optimizeSvg } from '@/lib/svg-processing/svg-optimizer';
-import { parseSvg, fileNameToIconName } from '@/lib/svg-processing/svg-parser';
-import { normalizeSvg } from '@/lib/svg-processing/svg-normalizer';
+import { fileNameToIconName } from '@/lib/svg-processing/svg-parser';
+import { processSvg } from '@/lib/svg-processing/svg-pipeline';
 import { AUTO_IMPORT_START, PUA_END } from '@/lib/font-generation/constants';
 import type { IconGlyph } from '@/types';
 
@@ -42,27 +41,12 @@ export function useIconImport(projectId: string | null) {
       for (const file of files) {
         try {
           const raw = await file.text();
-
-          // Preserve original SVG structure for display — only strip fixed width/height
-          // so it scales correctly inside the CSS-sized icon card container.
-          // svgContent is never read by font generation (which uses pathData + viewBox).
-          const rawDoc = new DOMParser().parseFromString(raw, 'image/svg+xml');
-          const rawSvgEl = rawDoc.querySelector('svg');
-          if (rawSvgEl) {
-            rawSvgEl.removeAttribute('width');
-            rawSvgEl.removeAttribute('height');
-          }
-          const displaySvg = new XMLSerializer().serializeToString(rawDoc.documentElement);
-
-          // Still run the full pipeline to extract pathData/viewBox for font generation
-          const optimized = optimizeSvg(raw);
-          const parsed = parseSvg(optimized, file.name);
-          const normalized = normalizeSvg(parsed);
+          const processed = processSvg(raw, file.name);
           const name = fileNameToIconName(file.name);
           const iconId = crypto.randomUUID();
 
           const formData = new FormData();
-          formData.append('file', new Blob([optimized], { type: 'image/svg+xml' }), file.name);
+          formData.append('file', new Blob([processed.optimized], { type: 'image/svg+xml' }), file.name);
           formData.append('projectId', projectId);
           formData.append('iconId', iconId);
           const token = await getIdToken();
@@ -80,11 +64,11 @@ export function useIconImport(projectId: string | null) {
             id: iconId,
             projectId,
             name,
-            svgContent: displaySvg,
-            pathData: normalized.pathData,
-            viewBox: normalized.viewBox,
-            width: normalized.width,
-            height: normalized.height,
+            svgContent: processed.displaySvg,
+            pathData: processed.pathData,
+            viewBox: processed.viewBox,
+            width: processed.width,
+            height: processed.height,
             tags: [],
             r2Url,
             unicode: allocateNextCodepoint(),

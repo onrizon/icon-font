@@ -47,6 +47,13 @@
   height: 0.875rem;
 }
 
+.replaceError {
+  padding: 0.375rem 1rem;
+  font-size: 0.75rem;
+  color: var(--destructive);
+  border-bottom: 1px solid var(--border);
+}
+
 .body {
   display: flex;
   flex: 1;

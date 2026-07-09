@@ -3,12 +3,15 @@
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { useIconStore } from '@/stores/icon-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { formatCodepoint } from '@/lib/font-generation/codepoint-allocator';
 import { PUA_START, PUA_END } from '@/lib/font-generation/constants';
 import { sanitizeIconName } from '@/lib/svg-processing/svg-parser';
-import { useMemo, useState } from 'react';
+import { processSvg } from '@/lib/svg-processing/svg-pipeline';
+import { Loader2, Upload } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import type { IconGlyph } from '@/types';
 import styles from '@/app/styles/icon-preview-panel.module.css';
@@ -107,6 +110,63 @@ function UnicodeField({ icon, allIcons }: { icon: IconGlyph; allIcons: IconGlyph
   );
 }
 
+function ReplaceSvgField({ icon }: { icon: IconGlyph }) {
+  const updateIcon = useIconStore(s => s.updateIcon);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // reset so re-picking the same file still fires onChange
+    if (!file) return;
+    if (!(file.name.toLowerCase().endsWith('.svg') || file.type === 'image/svg+xml')) {
+      setError('Please choose an SVG file');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const processed = processSvg(await file.text(), file.name);
+      // Only the artwork fields are passed — name, unicode, tags, ligature, and order
+      // are left untouched by updateIcon.
+      await updateIcon(icon.id, {
+        svgContent: processed.displaySvg,
+        pathData: processed.pathData,
+        viewBox: processed.viewBox,
+        width: processed.width,
+        height: processed.height,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to replace SVG');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className={styles.field}>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => inputRef.current?.click()}
+        disabled={loading}
+      >
+        {loading ? <Loader2 className={styles.spinner} /> : <Upload />}
+        {loading ? 'Replacing…' : 'Replace SVG'}
+      </Button>
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".svg,image/svg+xml"
+        hidden
+        onChange={handleFile}
+      />
+      {error && <p className={styles.error}>{error}</p>}
+    </div>
+  );
+}
+
 export function IconPreviewPanel() {
   const selectedIds = useWorkspaceStore(s => s.selectedIds);
   const showGrid = useWorkspaceStore(s => s.showGrid);
@@ -172,6 +232,7 @@ export function IconPreviewPanel() {
                 <div className={styles.statValue}>{formatBytes(fileSize)}</div>
               </div>
             </div>
+            <ReplaceSvgField key={`replace-${icon.id}`} icon={icon} />
             <NameField key={`name-${icon.id}`} icon={icon} allIcons={icons} />
             <UnicodeField key={`unicode-${icon.id}`} icon={icon} allIcons={icons} />
           </>
