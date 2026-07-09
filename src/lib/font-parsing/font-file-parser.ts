@@ -124,7 +124,7 @@ function reverseTransformAndFit(
     if (!pathData?.trim()) return null;
 
     const viewBox = `0 0 ${vbSize} ${vbSize}`;
-    const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}"><path d="${pathData}"/></svg>`;
+    const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}"><path d="${pathData}" fill="currentColor"/></svg>`;
 
     return { pathData, viewBox, width: vbSize, height: vbSize, svgContent };
   } catch (e) {

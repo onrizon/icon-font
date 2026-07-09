@@ -1,6 +1,7 @@
 import { optimizeSvg } from './svg-optimizer';
 import { parseSvg } from './svg-parser';
 import { normalizeSvg } from './svg-normalizer';
+import { recolorToCurrentColor } from './svg-recolor';
 
 export interface ProcessedSvg {
   /** Raw SVG with fixed width/height stripped off <svg>; stored as the icon's svgContent. */
@@ -22,13 +23,15 @@ export interface ProcessedSvg {
  */
 export function processSvg(raw: string, fileName: string): ProcessedSvg {
   // Preserve original SVG structure for display — only strip fixed width/height
-  // so it scales correctly inside the CSS-sized container.
+  // so it scales correctly inside the CSS-sized container, and recolor all paints
+  // to currentColor so the icon follows the CSS `color` property (icon-font behavior).
   // displaySvg is never read by font generation (which uses pathData + viewBox).
   const rawDoc = new DOMParser().parseFromString(raw, 'image/svg+xml');
   const rawSvgEl = rawDoc.querySelector('svg');
   if (rawSvgEl) {
     rawSvgEl.removeAttribute('width');
     rawSvgEl.removeAttribute('height');
+    recolorToCurrentColor(rawSvgEl);
   }
   const displaySvg = new XMLSerializer().serializeToString(rawDoc.documentElement);
 
