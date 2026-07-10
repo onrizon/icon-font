@@ -1,20 +1,20 @@
 'use client';
 
+import styles from '@/app/styles/icon-preview-panel.module.css';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { formatCodepoint } from '@/lib/font-generation/codepoint-allocator';
+import { PUA_END, PUA_START } from '@/lib/font-generation/constants';
+import { sanitizeIconName } from '@/lib/svg-processing/svg-parser';
+import { normalizeDisplaySvg, processSvg } from '@/lib/svg-processing/svg-pipeline';
 import { useIconStore } from '@/stores/icon-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
-import { formatCodepoint } from '@/lib/font-generation/codepoint-allocator';
-import { PUA_START, PUA_END } from '@/lib/font-generation/constants';
-import { sanitizeIconName } from '@/lib/svg-processing/svg-parser';
-import { processSvg } from '@/lib/svg-processing/svg-pipeline';
-import { Loader2, Upload } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
-import clsx from 'clsx';
 import type { IconGlyph } from '@/types';
-import styles from '@/app/styles/icon-preview-panel.module.css';
+import clsx from 'clsx';
+import { DropletOff, Loader2, Upload } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
 
 function formatBytes(n: number): string {
   if (n < 1024) return `${n} B`;
@@ -167,6 +167,45 @@ function ReplaceSvgField({ icon }: { icon: IconGlyph }) {
   );
 }
 
+function RemoveColorsField({ icon }: { icon: IconGlyph }) {
+  const updateIcon = useIconStore(s => s.updateIcon);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Icons that are already monochrome (and mask-free) normalize to themselves;
+  // only rendered client-side (an icon must be selected), so DOMParser is available.
+  const normalized = useMemo(() => normalizeDisplaySvg(icon.svgContent), [icon.svgContent]);
+  const alreadyClean = normalized === icon.svgContent;
+
+  const handleClick = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await updateIcon(icon.id, { svgContent: normalized });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to remove colors');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className={styles.field}>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleClick}
+        disabled={loading || alreadyClean}
+        title="Make monochrome: rewrite every fill/stroke to currentColor"
+      >
+        {loading ? <Loader2 className={styles.spinner} /> : <DropletOff />}
+        {loading ? 'Removing…' : 'Remove colors'}
+      </Button>
+      {error && <p className={styles.error}>{error}</p>}
+    </div>
+  );
+}
+
 export function IconPreviewPanel() {
   const selectedIds = useWorkspaceStore(s => s.selectedIds);
   const showGrid = useWorkspaceStore(s => s.showGrid);
@@ -232,9 +271,10 @@ export function IconPreviewPanel() {
                 <div className={styles.statValue}>{formatBytes(fileSize)}</div>
               </div>
             </div>
-            <ReplaceSvgField key={`replace-${icon.id}`} icon={icon} />
             <NameField key={`name-${icon.id}`} icon={icon} allIcons={icons} />
             <UnicodeField key={`unicode-${icon.id}`} icon={icon} allIcons={icons} />
+            <ReplaceSvgField key={`replace-${icon.id}`} icon={icon} />
+            <RemoveColorsField key={`recolor-${icon.id}`} icon={icon} />
           </>
         )}
         <Separator />
