@@ -37,6 +37,18 @@
   margin-right: 0.25rem;
 }
 
+.alignRow {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.alignRowLabel {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  flex: 1;
+}
+
 .scaleHeader {
   display: flex;
   align-items: center;

@@ -41,20 +41,6 @@ export interface FontSettings {
   descender: number;
 }
 
-export interface GeneratedFont {
-  ttf: ArrayBuffer;
-  woff2: ArrayBuffer;
-  svg: string;
-  css: string;
-  html: string;
-}
-
-export interface ExportOptions {
-  formats: ('ttf' | 'woff2')[];
-  prefix: string;
-  fontName: string;
-}
-
 export type ViewMode = 'small' | 'medium' | 'large';
 
 export type EditorTab = 'icons' | 'editor' | 'preview' | 'generate';

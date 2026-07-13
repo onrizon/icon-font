@@ -27,7 +27,7 @@ const sizeClass: Record<ButtonSize, string> = {
   "icon-lg": styles.sizeIconLg,
 }
 
-export function buttonVariants({
+function buttonVariants({
   variant = "default",
   size = "default",
   className,

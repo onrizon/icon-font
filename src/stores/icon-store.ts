@@ -20,7 +20,6 @@ interface IconStore {
   deleteIcons: (ids: string[]) => Promise<void>;
   reorderIcons: (orderedIds: string[]) => Promise<void>;
   setSearchQuery: (query: string) => void;
-  getFilteredIcons: () => IconGlyph[];
   getNextOrder: () => number;
 }
 
@@ -206,17 +205,6 @@ export const useIconStore = create<IconStore>((set, get) => ({
   },
 
   setSearchQuery: (query) => set({ searchQuery: query }),
-
-  getFilteredIcons: () => {
-    const { icons, searchQuery } = get();
-    if (!searchQuery) return icons;
-    const q = searchQuery.toLowerCase();
-    return icons.filter(
-      icon =>
-        icon.name.toLowerCase().includes(q) ||
-        icon.tags.some(t => t.toLowerCase().includes(q))
-    );
-  },
 
   getNextOrder: () => {
     const { icons } = get();

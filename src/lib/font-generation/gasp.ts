@@ -7,10 +7,10 @@
 // emits the table when `font.write({ type: 'ttf', hinting: true })` is used
 // (see ttfwriter.js prepareDump — hinting branch).
 
-export const GASP_GRIDFIT = 0x0001;
-export const GASP_DOGRAY = 0x0002;
-export const GASP_SYMMETRIC_GRIDFIT = 0x0004;
-export const GASP_SYMMETRIC_SMOOTHING = 0x0008;
+const GASP_GRIDFIT = 0x0001;
+const GASP_DOGRAY = 0x0002;
+const GASP_SYMMETRIC_GRIDFIT = 0x0004;
+const GASP_SYMMETRIC_SMOOTHING = 0x0008;
 
 export interface GaspRange {
   rangeMaxPPEM: number;
@@ -19,7 +19,7 @@ export interface GaspRange {
 
 // Icomoon-style single range: aggressive smoothing + gridfit at *all* sizes.
 // Matches src/components/fonts/icomoon.ttf byte-for-byte (gasp table = 8 bytes).
-export const DEFAULT_GASP_RANGES: GaspRange[] = [
+const DEFAULT_GASP_RANGES: GaspRange[] = [
   {
     rangeMaxPPEM: 0xffff,
     rangeGaspBehavior:

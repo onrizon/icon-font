@@ -15,7 +15,7 @@ const variantClass: Record<BadgeVariant, string> = {
   link: styles.variantLink,
 }
 
-export function badgeVariants({
+function badgeVariants({
   variant = "default",
   className,
 }: { variant?: BadgeVariant; className?: string } = {}): string {

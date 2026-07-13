@@ -138,7 +138,7 @@ function parseBinaryFont(buffer: ArrayBuffer): ParsedFontFile {
 
   const fontFamily = font.familyName || 'imported-font';
   const { unitsPerEm, ascender, descender } = font;
-  // Use scale=1: treat font units directly. The forward transform in svg-to-glyph.ts
+  // Use scale=1: treat font units directly. The forward transform in svg-font-builder.ts
   // uses unitsPerEm/viewBoxSize, but for externally-created fonts that scale is unknown.
   // scale=1 means reverseTransformAndFit only applies the Y-flip (scale(1,-1) + translate(0,ascender)),
   // which is correct for any font regardless of origin.

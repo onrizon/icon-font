@@ -24,8 +24,8 @@ function init(): App {
 
 const adminApp = init();
 
-export const adminAuth = getAuth(adminApp);
-export const adminFirestore = getFirestore(adminApp);
+const adminAuth = getAuth(adminApp);
+const adminFirestore = getFirestore(adminApp);
 
 export async function verifyIdTokenFromRequest(req: Request): Promise<{ uid: string }> {
   const header = req.headers.get('authorization') ?? req.headers.get('Authorization');

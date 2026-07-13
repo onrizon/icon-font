@@ -9,7 +9,11 @@ import { buildGlyphSvg } from '@/lib/svg-processing/svg-glyph';
 import type { IconGlyph, Transform } from '@/types';
 import {
   AlignHorizontalJustifyCenter,
+  AlignHorizontalJustifyEnd,
+  AlignHorizontalJustifyStart,
   AlignVerticalJustifyCenter,
+  AlignVerticalJustifyEnd,
+  AlignVerticalJustifyStart,
   FlipHorizontal2,
   FlipVertical2,
   Maximize2,
@@ -34,6 +38,8 @@ interface TransformPanelProps {
 const SCALE_STEP = 0.05; // 5% per click
 const SCALE_MIN = 0.1;
 const SCALE_MAX = 2;
+
+type Alignment = 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom';
 
 function bakeIntoPath(
   icon: IconGlyph,
@@ -105,7 +111,7 @@ export function TransformPanel({
     applyToDraft({ ...getDefaultTransform(), flipV: true });
   }, [applyToDraft]);
 
-  const handleCenter = useCallback((axis: 'horizontal' | 'vertical') => {
+  const handleAlign = useCallback((alignment: Alignment) => {
     const { path: baked, vbW, vbH, size } = bakeIntoPath(icon, pendingScale, pendingTranslate, canvasContentPx);
 
     const container = document.createElement('div');
@@ -124,10 +130,25 @@ export function TransformPanel({
 
     let dx = 0;
     let dy = 0;
-    if (axis === 'horizontal') {
-      dx = (vbW - bbox.width) / 2 - bbox.x;
-    } else {
-      dy = (vbH - bbox.height) / 2 - bbox.y;
+    switch (alignment) {
+      case 'left':
+        dx = -bbox.x;
+        break;
+      case 'center':
+        dx = (vbW - bbox.width) / 2 - bbox.x;
+        break;
+      case 'right':
+        dx = vbW - bbox.width - bbox.x;
+        break;
+      case 'top':
+        dy = -bbox.y;
+        break;
+      case 'middle':
+        dy = (vbH - bbox.height) / 2 - bbox.y;
+        break;
+      case 'bottom':
+        dy = vbH - bbox.height - bbox.y;
+        break;
     }
 
     const finalPath = applyTransform(baked, {
@@ -195,27 +216,65 @@ export function TransformPanel({
       <Separator />
 
       <div className={styles.section}>
-        <Label className={styles.label}>Center</Label>
-        <div className={styles.buttonRow}>
+        <Label className={styles.label}>Align</Label>
+        <div className={styles.alignRow}>
+          <span className={styles.alignRowLabel}>Horizontal</span>
           <Button
             variant="outline"
-            size="sm"
-            className={styles.button}
-            onClick={() => handleCenter('horizontal')}
-            title="Center horizontally within the viewBox"
+            size="icon-sm"
+            onClick={() => handleAlign('left')}
+            title="Align left within the viewBox"
+            aria-label="Align left"
           >
-            <AlignHorizontalJustifyCenter className={styles.buttonIcon} />
-            Horizontal
+            <AlignHorizontalJustifyStart />
           </Button>
           <Button
             variant="outline"
-            size="sm"
-            className={styles.button}
-            onClick={() => handleCenter('vertical')}
-            title="Center vertically within the viewBox"
+            size="icon-sm"
+            onClick={() => handleAlign('center')}
+            title="Align center within the viewBox"
+            aria-label="Align center"
           >
-            <AlignVerticalJustifyCenter className={styles.buttonIcon} />
-            Vertical
+            <AlignHorizontalJustifyCenter />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon-sm"
+            onClick={() => handleAlign('right')}
+            title="Align right within the viewBox"
+            aria-label="Align right"
+          >
+            <AlignHorizontalJustifyEnd />
+          </Button>
+        </div>
+        <div className={styles.alignRow}>
+          <span className={styles.alignRowLabel}>Vertical</span>
+          <Button
+            variant="outline"
+            size="icon-sm"
+            onClick={() => handleAlign('top')}
+            title="Align top within the viewBox"
+            aria-label="Align top"
+          >
+            <AlignVerticalJustifyStart />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon-sm"
+            onClick={() => handleAlign('middle')}
+            title="Align middle within the viewBox"
+            aria-label="Align middle"
+          >
+            <AlignVerticalJustifyCenter />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon-sm"
+            onClick={() => handleAlign('bottom')}
+            title="Align bottom within the viewBox"
+            aria-label="Align bottom"
+          >
+            <AlignVerticalJustifyEnd />
           </Button>
         </div>
       </div>
