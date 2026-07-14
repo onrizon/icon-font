@@ -53,16 +53,9 @@ function bakeIntoPath(
   const size = Math.max(vbW, vbH);
   let path = icon.pathData;
 
-  const groupMatch = icon.svgContent.match(
-    /<g[^>]*transform="translate\(\s*([-\d.eE]+)\s*[,\s]\s*([-\d.eE]+)\s*\)"/
-  );
-  if (groupMatch) {
-    const gtx = parseFloat(groupMatch[1]) || 0;
-    const gty = parseFloat(groupMatch[2]) || 0;
-    if (gtx || gty) {
-      path = applyTransform(path, { ...getDefaultTransform(), translateX: gtx, translateY: gty }, size);
-    }
-  }
+  // No <g transform> compensation here: hydrated pathData always comes from
+  // the parse pipeline with translates already baked into the coordinates;
+  // re-applying a wrapper translate would double it.
   if (pendingScale !== 1) {
     path = applyTransform(path, { ...getDefaultTransform(), scale: pendingScale }, size);
   }

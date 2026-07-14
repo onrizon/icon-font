@@ -2,7 +2,12 @@ export interface IconGlyph {
   id: string;
   projectId: string;
   name: string;
+  /**
+   * Runtime-hydrated from the R2 blob (`icons/{projectId}/{id}.svg`) — not
+   * persisted in Firestore. Empty string until hydration completes.
+   */
   svgContent: string;
+  /** Runtime-hydrated alongside svgContent — not persisted in Firestore. */
   pathData: string;
   viewBox: string;
   width: number;

@@ -5,6 +5,7 @@ import { collection, doc, getDoc, getDocs, query, where, writeBatch } from 'fire
 import { firestore, auth } from '@/lib/firebase';
 import { getIdToken } from '@/hooks/use-auth';
 import { validateProject, validateIcon } from '@/lib/firestore-schema';
+import { hydrateIconsForExport } from '@/lib/icon-hydration';
 import type { IconGlyph, Project } from '@/types';
 
 interface ProjectExport {
@@ -20,9 +21,13 @@ export async function exportProject(projectId: string): Promise<void> {
   const project = validateProject(projectSnap.id, projectSnap.data());
 
   const iconsSnap = await getDocs(query(collection(firestore, 'icons'), where('parent', '==', projectId)));
-  const icons: IconGlyph[] = iconsSnap.docs
-    .map(d => validateIcon(d.id, d.data()))
-    .sort((a, b) => a.order - b.order);
+  // Metadata-only docs carry no artwork — pull the raw blobs from R2 so the
+  // exported JSON is self-contained (format unchanged, version 1).
+  const icons: IconGlyph[] = await hydrateIconsForExport(
+    iconsSnap.docs
+      .map(d => validateIcon(d.id, d.data()))
+      .sort((a, b) => a.order - b.order)
+  );
 
   const data: ProjectExport = {
     version: 1,
@@ -96,7 +101,8 @@ export async function importProject(file: File): Promise<string> {
 
     const batch = writeBatch(firestore);
     for (const icon of icons) {
-      const { id: iconId, projectId: _pid, ...iconData } = icon;
+      // Metadata-only doc — the artwork was uploaded to R2 above.
+      const { id: iconId, projectId: _pid, svgContent: _svg, pathData: _path, ...iconData } = icon;
       batch.set(doc(firestore, 'icons', iconId), { ...iconData, parent: newProjectId });
     }
     await batch.commit();

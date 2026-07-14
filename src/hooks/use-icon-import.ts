@@ -79,7 +79,11 @@ export function useIconImport(projectId: string | null) {
       }
 
       if (iconsToAdd.length > 0) {
-        await addIcons(projectId, iconsToAdd);
+        try {
+          await addIcons(projectId, iconsToAdd);
+        } catch (err) {
+          importErrors.push(`Failed to save icons: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        }
       }
 
       setErrors(importErrors);

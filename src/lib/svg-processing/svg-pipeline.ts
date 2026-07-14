@@ -4,6 +4,13 @@ import { normalizeSvg } from './svg-normalizer';
 import { recolorToCurrentColor } from './svg-recolor';
 import { stripMasking } from './svg-strip-masking';
 
+/**
+ * Sanity ceiling for imported SVG files. Docs are metadata-only (artwork lives
+ * in R2), so this only blocks absurd inputs that would hang the pipeline or
+ * the font writer. Must stay below /api/upload-svg's MAX_SVG_BYTES.
+ */
+export const MAX_IMPORT_SVG_BYTES = 2 * 1024 * 1024;
+
 export interface ProcessedSvg {
   /**
    * Raw SVG with fixed width/height and mask/clip machinery stripped off, paints
@@ -48,8 +55,24 @@ export function normalizeDisplaySvg(svg: string): string {
  * `fileName` is used only for parseSvg's error messages.
  */
 export function processSvg(raw: string, fileName: string): ProcessedSvg {
+  if (new TextEncoder().encode(raw).length > MAX_IMPORT_SVG_BYTES) {
+    throw new Error(
+      `${fileName} is too large (over ${MAX_IMPORT_SVG_BYTES / (1024 * 1024)} MB). Simplify the SVG before importing.`
+    );
+  }
+
   // displaySvg is never read by font generation (which uses pathData + viewBox).
   const displaySvg = normalizeDisplaySvg(raw);
+
+  // <image> bitmaps can't become glyphs — extractPathData would silently
+  // ignore them, yielding an icon that previews but exports empty. Checked
+  // post-strip so images that were only mask/clip machinery don't reject.
+  const displayDoc = new DOMParser().parseFromString(displaySvg, 'image/svg+xml');
+  if (displayDoc.querySelector('image')) {
+    throw new Error(
+      `${fileName} contains an embedded bitmap (<image>), which cannot be converted to a font glyph. Vectorize it first.`
+    );
+  }
 
   // Full pipeline to extract pathData/viewBox for font generation.
   const optimized = optimizeSvg(raw);

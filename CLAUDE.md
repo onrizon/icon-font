@@ -45,9 +45,10 @@ Stores call Firestore directly (client SDK) and upload SVG blobs to R2 through t
 
 ### Storage (Firestore + R2)
 
-- Firestore collection `projects`: project docs keyed by id, owner-scoped via `ownerUid`.
-- Firestore collection `icons`: icon docs; the project FK is stored as `parent` and mapped to `projectId` by `validateIcon` in `src/lib/firestore-schema.ts`. Docs carry full `svgContent` + `pathData` inline.
-- R2 bucket: raw SVGs at `icons/{projectId}/{id}.svg`, written on import/edit via `/api/upload-svg` (Bearer-token authenticated, ownership-checked server-side in `src/lib/firebase-admin.ts`).
+- Firestore collection `project` (singular): project docs keyed by id, owner-scoped via `ownerUid`.
+- Firestore collection `icons`: **metadata-only** docs (`parent`, name, width/height/viewBox, unicode, ligature, tags, order, `r2Url`, timestamps — ~0.4 KB each, immune to the 1 MiB doc limit). The project FK is stored as `parent` and mapped to `projectId` by `validateIcon` in `src/lib/firestore-schema.ts`. **`svgContent`/`pathData` are NOT persisted** — they are runtime-hydrated from R2 by `hydrateIcons` in `src/lib/icon-hydration.ts` (batched via `POST /api/get-svgs`, ≤50 ids/request; fast-path parse for single-path blobs, else SVGO pipeline; IndexedDB cache keyed by `iconId`+`updatedAt`). Docs that still carry inline artwork are legacy and are lazily migrated on project open (`migrateLegacyIcons`: R2 blob confirmed first, then `deleteField` the inline artwork; `updatedAt` not bumped).
+- R2 bucket: raw SVGs at `icons/{projectId}/{id}.svg` — the **single source of truth for artwork** — written on import/edit via `/api/upload-svg` (Bearer-token authenticated, ownership-checked server-side in `src/lib/firebase-admin.ts`; 4 MB cap). `addIcons` uploads for any icon lacking `r2Url` (covers font import). Deletion order matters: Firestore docs first, then best-effort R2 cleanup (`deleteProject` must clean R2 before removing the project doc — the delete API's ownership check reads it).
+- Import guard: `processSvg` rejects files over 2 MB (`MAX_IMPORT_SVG_BYTES`) and SVGs containing `<image>` bitmaps. Per-file import errors surface via `useIconImport().errors`, rendered by `SvgDropzone`.
 
 ### Routes
 

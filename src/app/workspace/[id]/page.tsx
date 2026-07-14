@@ -20,12 +20,15 @@ import { ProjectSettings } from '@/components/project/project-settings';
 import { IconPreviewPanel } from '@/components/workspace/icon-preview-panel';
 import { Loader2 } from 'lucide-react';
 import styles from '@/app/styles/workspace.module.css';
+import dropzoneStyles from '@/app/styles/svg-dropzone.module.css';
 
 function WorkspaceContent() {
   const activeTab = useWorkspaceStore(s => s.activeTab);
   const icons = useIconStore(s => s.icons);
+  const iconsLoading = useIconStore(s => s.loading);
+  const hydrationFailures = useIconStore(s => s.hydrationFailures);
   const currentProjectId = useProjectStore(s => s.currentProjectId);
-  const { importSvgFiles, importing } = useIconImport(currentProjectId);
+  const { importSvgFiles, importing, errors: importErrors } = useIconImport(currentProjectId);
   const selectedIds = useWorkspaceStore(s => s.selectedIds);
   const clearSelection = useWorkspaceStore(s => s.clearSelection);
   const deleteIcons = useIconStore(s => s.deleteIcons);
@@ -65,15 +68,30 @@ function WorkspaceContent() {
           <div className={styles.contentColumn}>
             <SearchToolbar />
             <SelectionToolbar />
+            {hydrationFailures > 0 && (
+              <div className={dropzoneStyles.errors} role="alert">
+                <p className={dropzoneStyles.errorsTitle}>
+                  {hydrationFailures === 1
+                    ? '1 icon failed to load its artwork — check your connection and reload. Editing it is blocked to protect the stored artwork.'
+                    : `${hydrationFailures} icons failed to load their artwork — check your connection and reload. Editing them is blocked to protect the stored artwork.`}
+                </p>
+              </div>
+            )}
             <div className={styles.scrollArea}>
-              {icons.length === 0 ? (
+              {iconsLoading ? (
+                // Loading covers doc fetch + R2 hydration; without this gate the
+                // empty-state dropzone flashes and invites duplicate imports.
+                <div className={styles.loading}>
+                  <Loader2 className={styles.spinner} />
+                </div>
+              ) : icons.length === 0 ? (
                 <div className={styles.emptyState}>
-                  <SvgDropzone onFilesAccepted={importSvgFiles} importing={importing} />
+                  <SvgDropzone onFilesAccepted={importSvgFiles} importing={importing} errors={importErrors} />
                 </div>
               ) : (
                 <>
                   <div className={styles.dropzoneWrap}>
-                    <SvgDropzone onFilesAccepted={importSvgFiles} importing={importing} compact />
+                    <SvgDropzone onFilesAccepted={importSvgFiles} importing={importing} compact errors={importErrors} />
                   </div>
                   <IconGrid />
                 </>

@@ -68,7 +68,7 @@ export function validateIcon(id: string, data: unknown): IconGlyph {
   const projectId = d.parent;
   if (!isString(projectId)) throw new Error(`Icon ${id}: missing or non-string parent`);
 
-  const strings = { name: d.name, svgContent: d.svgContent, pathData: d.pathData, viewBox: d.viewBox };
+  const strings = { name: d.name, viewBox: d.viewBox };
   for (const [k, v] of Object.entries(strings)) {
     if (!isString(v)) throw new Error(`Icon ${id}: missing or non-string ${k}`);
   }
@@ -82,8 +82,10 @@ export function validateIcon(id: string, data: unknown): IconGlyph {
     id,
     projectId,
     name: strings.name as string,
-    svgContent: strings.svgContent as string,
-    pathData: strings.pathData as string,
+    // Metadata-only docs omit svgContent/pathData (artwork lives in R2 and is
+    // hydrated after load); legacy docs still carry them inline until migrated.
+    svgContent: isString(d.svgContent) ? d.svgContent : '',
+    pathData: isString(d.pathData) ? d.pathData : '',
     viewBox: strings.viewBox as string,
     width: numbers.width as number,
     height: numbers.height as number,

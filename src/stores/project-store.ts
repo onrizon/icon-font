@@ -126,19 +126,28 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     const iconsSnap = await getDocs(query(collection(firestore, 'icons'), where('parent', '==', id)));
     if (!iconsSnap.empty) {
       const iconIds = iconsSnap.docs.map(d => d.id);
-      const token = await getIdToken();
-      const res = await fetch('/api/delete-r2-objects', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ projectId: id, iconIds }),
-      });
-      if (!res.ok) throw new Error(`Failed to delete R2 objects: ${res.status}`);
+      // Icon docs first (no artwork fallback in metadata-only docs), then R2
+      // cleanup while the project doc still exists — the delete API's
+      // ownership check reads it. Orphan blobs on failure are harmless.
       const batch = writeBatch(firestore);
       iconsSnap.docs.forEach(d => batch.delete(d.ref));
       await batch.commit();
+      try {
+        const token = await getIdToken();
+        const res = await fetch('/api/delete-r2-objects', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ projectId: id, iconIds }),
+        });
+        if (!res.ok) {
+          console.error(`R2 cleanup failed (${res.status}); orphan blobs left for project ${id}`);
+        }
+      } catch (err) {
+        console.error('R2 cleanup failed; orphan blobs left:', err);
+      }
     }
     await deleteDoc(doc(firestore, 'project', id));
     const projects = await fetchProjects(uid);

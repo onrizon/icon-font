@@ -4,7 +4,11 @@ import { r2, BUCKET, R2_PUBLIC_URL } from '@/lib/r2';
 import { verifyIdTokenFromRequest, assertProjectOwnership, HttpError } from '@/lib/firebase-admin';
 
 const ID_PATTERN = /^[a-zA-Z0-9_-]{1,64}$/;
-const MAX_SVG_BYTES = 1024 * 1024; // 1 MB
+// Must exceed the client-side MAX_IMPORT_SVG_BYTES (2 MB, svg-pipeline.ts) and
+// cover legacy inline artwork up to Firestore's 1 MiB doc limit during lazy
+// migration. 4 MB multipart fits under typical serverless request caps
+// (~4.5 MB) — barely; don't raise further without checking the host's limit.
+const MAX_SVG_BYTES = 4 * 1024 * 1024;
 
 export async function POST(req: NextRequest) {
   try {

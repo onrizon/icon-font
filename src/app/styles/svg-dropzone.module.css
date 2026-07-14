@@ -78,3 +78,29 @@
   font-size: 0.875rem;
   color: var(--muted-foreground);
 }
+
+.errors {
+  margin-top: 0.75rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in oklch, var(--destructive) 40%, transparent);
+  background-color: color-mix(in oklch, var(--destructive) 6%, transparent);
+  padding: 0.75rem 1rem;
+}
+
+.errorsTitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--destructive);
+  margin-bottom: 0.25rem;
+}
+
+.errorsList {
+  list-style: disc;
+  padding-left: 1.25rem;
+}
+
+.errorItem {
+  font-size: 0.8125rem;
+  color: var(--destructive);
+  overflow-wrap: anywhere;
+}
