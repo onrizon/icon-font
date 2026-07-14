@@ -34,7 +34,6 @@ export function validateProject(id: string, data: unknown): Project {
     unitsPerEm: d.unitsPerEm,
     ascender: d.ascender,
     descender: d.descender,
-    baselineOffset: d.baselineOffset,
     createdAt: d.createdAt,
     updatedAt: d.updatedAt,
   };
@@ -51,7 +50,6 @@ export function validateProject(id: string, data: unknown): Project {
     unitsPerEm: numbers.unitsPerEm as number,
     ascender: numbers.ascender as number,
     descender: numbers.descender as number,
-    baselineOffset: numbers.baselineOffset as number,
     iconCount: isNumber(d.iconCount) ? d.iconCount : 0,
     createdAt: numbers.createdAt as number,
     updatedAt: numbers.updatedAt as number,

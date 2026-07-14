@@ -4,15 +4,11 @@ import clsx from "clsx"
 
 import styles from '@/app/styles/badge.module.css'
 
-export type BadgeVariant = "default" | "secondary" | "destructive" | "outline" | "ghost" | "link"
+export type BadgeVariant = "default" | "secondary"
 
 const variantClass: Record<BadgeVariant, string> = {
   default: styles.variantDefault,
   secondary: styles.variantSecondary,
-  destructive: styles.variantDestructive,
-  outline: styles.variantOutline,
-  ghost: styles.variantGhost,
-  link: styles.variantLink,
 }
 
 function badgeVariants({

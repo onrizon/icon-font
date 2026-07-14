@@ -31,7 +31,6 @@ const DEFAULT_PROJECT: Omit<Project, 'id' | 'ownerUid' | 'createdAt' | 'updatedA
   unitsPerEm: 1024,
   ascender: 1024,
   descender: 0,
-  baselineOffset: 0,
   iconCount: 0,
 };
 

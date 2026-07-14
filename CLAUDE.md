@@ -14,7 +14,7 @@ No test framework is configured.
 
 ## Tech Stack
 
-Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + shadcn/ui (new-york style). Single-page client-side app — all components are `'use client'`. State via Zustand, persistence via Dexie.js (IndexedDB). Font writing via `fonteditor-core` (real TrueType glyf/loca + gasp). Font reading via `opentype.js`. SVG path math via `svg-pathdata`. WOFF2 compression via `woff2-encoder`. Drag-and-drop reordering via @dnd-kit. Export via JSZip + file-saver.
+Next.js 16 (App Router) + React 19 + TypeScript + shadcn-style UI components (radix-ui) styled with **per-component CSS modules** under `src/app/styles/*` — no Tailwind at runtime. Client-heavy app: workspace components are `'use client'`; API routes under `src/app/api/*` are server-side. State via Zustand. Persistence: **Firestore** (icon/project docs, client SDK) + **Cloudflare R2** (raw SVG blobs via `/api/upload-svg`, `@aws-sdk/client-s3` + `firebase-admin` server-side). Auth via Firebase Google sign-in. Font writing via `fonteditor-core` (real TrueType glyf/loca + gasp). Font reading via `opentype.js`. SVG path math via `svg-pathdata`. WOFF2 compression via `woff2-encoder`. Drag-and-drop reordering via @dnd-kit. Export via JSZip + file-saver.
 
 ## Architecture
 
@@ -29,7 +29,7 @@ The app converts SVG icons into font files through this pipeline:
 
 ### Coordinate Transform (critical)
 
-Font coordinates use Y-up; SVG uses Y-down. The transform in `svg-to-glyph.ts`:
+Font coordinates use Y-up; SVG uses Y-down. The forward transform lives in the SVG-font XML built by `svg-font-builder.ts`:
 ```
 scale(s, s) → translate(0, -ascender) → scale(1, -1)
 ```
@@ -41,17 +41,19 @@ where `s = unitsPerEm / max(viewBoxWidth, viewBoxHeight)`. The reverse in `font-
 - **`useIconStore`** — Icons CRUD, search/filter, ordering. All icons belong to a `projectId`.
 - **`useWorkspaceStore`** — UI-only: selection (Set of IDs with single/toggle/range/all), view mode, active tab, sidebar state.
 
-Stores interact with Dexie directly. Switching projects triggers `loadIcons(projectId)` in `page.tsx` via useEffect.
+Stores call Firestore directly (client SDK) and upload SVG blobs to R2 through the API routes. Switching projects triggers `loadIcons(projectId)` in `src/app/workspace/[id]/page.tsx` via useEffect.
 
-### Storage (Dexie.js)
+### Storage (Firestore + R2)
 
-Database `IconFontGenDB` with two tables:
-- `icons`: id (PK), projectId, name, unicode, order, [projectId+order]
-- `projects`: id (PK), name, createdAt
+- Firestore collection `projects`: project docs keyed by id, owner-scoped via `ownerUid`.
+- Firestore collection `icons`: icon docs; the project FK is stored as `parent` and mapped to `projectId` by `validateIcon` in `src/lib/firestore-schema.ts`. Docs carry full `svgContent` + `pathData` inline.
+- R2 bucket: raw SVGs at `icons/{projectId}/{id}.svg`, written on import/edit via `/api/upload-svg` (Bearer-token authenticated, ownership-checked server-side in `src/lib/firebase-admin.ts`).
 
-### Page Structure
+### Routes
 
-Single route (`page.tsx`). `Home` component loads projects/icons, renders Header + Sidebar + WorkspaceContent + BottomBar. WorkspaceContent switches on `activeTab`: icons (grid + dropzone with drag-and-drop reordering), editor (icon transforms: rotate/flip/scale/translate via `svg-transformer.ts`), generate, preview (project settings).
+- `/login` — Google sign-in page.
+- `/projects` — project cards grid (create/rename/delete).
+- `/workspace/[id]` — the main workspace: Header + Sidebar + content switching on `activeTab`: icons (grid + dropzone with drag-and-drop reordering), editor (icon transforms: rotate/flip/scale/translate/align via `svg-transformer.ts` + `transform-panel.tsx`), generate, preview (project settings).
 
 ## Key Gotchas
 
@@ -61,7 +63,8 @@ Single route (`page.tsx`). `Home` component loads projects/icons, renders Header
 - **svg-pathdata**: Arc-to-curve is `A_TO_C()` not `ARC_TO_CUBIC_CURVES`. Transform methods (`scale`, `translate`, `toAbs`) return new instances. Use `encodeSVGPath(path.commands)` to serialize.
 - **woff2-encoder**: Async compression/decompression — can fail silently, wrapped in try/catch. WOFF2 detected via magic bytes (`0x774F4632`).
 - **Path alias**: `@/*` maps to `./src/*` (tsconfig).
-- **All components are client**: This is a fully client-side app. Every component file needs `'use client'`.
+- **Workspace components are client**: every component file under `src/components` needs `'use client'`. API routes and `src/lib/firebase-admin.ts`/`r2.ts` are server-only.
+- **No Tailwind**: utility classes like `animate-spin` do nothing. Styling is CSS modules per component (`src/app/styles/*.module.css`).
 - **SVG shape-to-path**: `svg-parser.ts` converts `<rect>`, `<circle>`, `<ellipse>`, `<polygon>`, `<polyline>`, `<line>` to `<path>` before processing.
 
 ## Core Types (`src/types/index.ts`)

@@ -4,8 +4,8 @@ import clsx from "clsx"
 
 import styles from '@/app/styles/button.module.css'
 
-export type ButtonVariant = "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
-export type ButtonSize = "default" | "xs" | "sm" | "lg" | "icon" | "icon-xs" | "icon-sm" | "icon-lg"
+export type ButtonVariant = "default" | "destructive" | "outline" | "secondary" | "ghost"
+export type ButtonSize = "default" | "sm" | "lg" | "icon-sm"
 
 const variantClass: Record<ButtonVariant, string> = {
   default: styles.variantDefault,
@@ -13,18 +13,13 @@ const variantClass: Record<ButtonVariant, string> = {
   outline: styles.variantOutline,
   secondary: styles.variantSecondary,
   ghost: styles.variantGhost,
-  link: styles.variantLink,
 }
 
 const sizeClass: Record<ButtonSize, string> = {
   default: styles.sizeDefault,
-  xs: styles.sizeXs,
   sm: styles.sizeSm,
   lg: styles.sizeLg,
-  icon: styles.sizeIcon,
-  "icon-xs": styles.sizeIconXs,
   "icon-sm": styles.sizeIconSm,
-  "icon-lg": styles.sizeIconLg,
 }
 
 function buttonVariants({

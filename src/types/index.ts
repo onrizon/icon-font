@@ -26,7 +26,6 @@ export interface Project {
   unitsPerEm: number;
   ascender: number;
   descender: number;
-  baselineOffset: number;
   iconCount: number;
   createdAt: number;
   updatedAt: number;
