@@ -42,8 +42,8 @@ export async function exportProject(projectId: string): Promise<void> {
 }
 
 export async function importProject(file: File): Promise<string> {
-  const uid = auth.currentUser?.uid;
-  if (!uid) throw new Error('Not authenticated');
+  const user = auth.currentUser;
+  if (!user) throw new Error('Not authenticated');
 
   const text = await file.text();
   const data: ProjectExport = JSON.parse(text);
@@ -56,10 +56,14 @@ export async function importProject(file: File): Promise<string> {
   const newProjectId = uuid();
   const now = Date.now();
 
+  const ownerName = user.displayName || user.email || undefined;
+  // Never inherit the exporting user's ownerName from the JSON.
+  const { ownerName: _importedOwnerName, ...importedProject } = data.project;
   const project: Project = {
-    ...data.project,
+    ...importedProject,
     id: newProjectId,
-    ownerUid: uid,
+    ownerUid: user.uid,
+    ...(ownerName ? { ownerName } : {}),
     name: `${data.project.name} (imported)`,
     iconCount: data.icons.length,
     createdAt: now,

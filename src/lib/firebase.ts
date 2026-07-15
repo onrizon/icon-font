@@ -1,6 +1,7 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { ALLOWED_EMAIL_DOMAIN } from '@/lib/auth-domain';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -16,3 +17,6 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0
 export const firestore = getFirestore(app);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+// UI hint only: pre-filters the Google account chooser to the workspace
+// domain. NOT enforcement — firestore.rules and the API routes verify it.
+googleProvider.setCustomParameters({ hd: ALLOWED_EMAIL_DOMAIN });

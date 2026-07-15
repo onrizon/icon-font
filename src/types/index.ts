@@ -24,6 +24,8 @@ export interface IconGlyph {
 export interface Project {
   id: string;
   ownerUid: string;
+  /** Creator's display name; lazily backfilled on legacy docs by the owner's own session. */
+  ownerName?: string;
   name: string;
   fontName: string;
   fontFamily: string;

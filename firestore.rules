@@ -3,34 +3,34 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function signedIn() {
-      return request.auth != null;
+    // Shared team workspace: any verified @onrizon.com.br account has full
+    // read/write access to all projects and icons.
+    // NOTE: the domain is duplicated in src/lib/auth-domain.ts (rules cannot
+    // import app code) — keep the two in sync.
+    // A token with no email claim errors the condition, which denies (fail-closed).
+    function isOnrizonUser() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.lower().matches('.*@onrizon\\.com\\.br');
     }
 
-    // Does the signed-in user own the given project document?
-    // Icons don't store ownerUid, so ownership is resolved via their parent project.
-    function ownsProject(projectId) {
-      return signedIn()
-        && get(/databases/$(database)/documents/project/$(projectId)).data.ownerUid == request.auth.uid;
-    }
-
-    // Projects — owner-scoped via the `ownerUid` field. NOTE: collection is `project` (singular).
+    // Projects — team-shared. NOTE: collection is `project` (singular).
     match /project/{projectId} {
-      allow read:   if signedIn() && resource.data.ownerUid == request.auth.uid;
-      allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid;
-      allow update: if signedIn()
-                    && resource.data.ownerUid == request.auth.uid
-                    && request.resource.data.ownerUid == request.auth.uid; // cannot reassign owner
-      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+      allow read, delete: if isOnrizonUser();
+      allow create: if isOnrizonUser()
+                    && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if isOnrizonUser()
+                    && request.resource.data.ownerUid == resource.data.ownerUid; // attribution is immutable
     }
 
-    // Icons — ownership is indirect via the `parent` field (the owning project id).
+    // Icons — team-shared; `parent` (the owning project id) cannot be changed.
+    // The old ownsProject() get() lookup is gone: it no longer differentiates
+    // users in a shared workspace and cost one billed read per icon op.
     match /icons/{iconId} {
-      allow read:   if ownsProject(resource.data.parent);
-      allow create: if ownsProject(request.resource.data.parent);
-      allow update: if ownsProject(resource.data.parent)
-                    && ownsProject(request.resource.data.parent); // cannot move to a project you don't own
-      allow delete: if ownsProject(resource.data.parent);
+      allow read, delete: if isOnrizonUser();
+      allow create: if isOnrizonUser() && request.resource.data.parent is string;
+      allow update: if isOnrizonUser()
+                    && request.resource.data.parent == resource.data.parent; // cannot move between projects
     }
   }
 }

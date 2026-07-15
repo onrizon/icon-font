@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DeleteObjectsCommand } from '@aws-sdk/client-s3';
 import { r2, BUCKET } from '@/lib/r2';
-import { verifyIdTokenFromRequest, assertProjectOwnership, HttpError } from '@/lib/firebase-admin';
+import { verifyIdTokenFromRequest, assertProjectExists, HttpError } from '@/lib/firebase-admin';
 
 const ID_PATTERN = /^[a-zA-Z0-9_-]{1,64}$/;
 
 export async function POST(req: NextRequest) {
   try {
-    const { uid } = await verifyIdTokenFromRequest(req);
+    await verifyIdTokenFromRequest(req);
 
     const body = await req.json();
     const projectId = body?.projectId;
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ deleted: 0 });
     }
 
-    await assertProjectOwnership(projectId, uid);
+    await assertProjectExists(projectId);
 
     await r2.send(new DeleteObjectsCommand({
       Bucket: BUCKET,

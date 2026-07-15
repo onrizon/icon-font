@@ -40,8 +40,10 @@ function requireUid(): string {
   return uid;
 }
 
-async function fetchProjects(uid: string): Promise<Project[]> {
-  const snap = await getDocs(query(collection(firestore, 'project'), where('ownerUid', '==', uid)));
+async function fetchProjects(): Promise<Project[]> {
+  // Shared team workspace: every domain user sees every project
+  // (firestore.rules enforces the @onrizon.com.br gate).
+  const snap = await getDocs(collection(firestore, 'project'));
   return snap.docs.map(d => validateProject(d.id, d.data()));
 }
 
@@ -52,12 +54,25 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   loading: true,
 
   loadProjects: async () => {
-    const uid = auth.currentUser?.uid;
-    if (!uid) {
+    const user = auth.currentUser;
+    if (!user) {
       set({ projects: [], currentProjectId: null, currentProject: null, loading: false });
       return;
     }
-    const projects = await fetchProjects(uid);
+    const projects = await fetchProjects();
+    // Backfill ownerName on this user's own legacy projects — only the owner's
+    // session knows their displayName. Fire-and-forget; deliberately does NOT
+    // bump updatedAt (that would reorder the grid and fake activity).
+    const ownerName = user.displayName || user.email || null;
+    if (ownerName) {
+      for (const p of projects) {
+        if (p.ownerUid === user.uid && !p.ownerName) {
+          p.ownerName = ownerName;
+          updateDoc(doc(firestore, 'project', p.id), { ownerName }).catch(err =>
+            console.error(`ownerName backfill failed for project ${p.id}:`, err));
+        }
+      }
+    }
     if (projects.length === 0) {
       set({ projects: [], currentProjectId: null, currentProject: null, loading: false });
       return;
@@ -74,10 +89,13 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
   createProject: async (name?: string) => {
     const uid = requireUid();
+    const ownerName = auth.currentUser?.displayName || auth.currentUser?.email || undefined;
     const now = Date.now();
     const project: Project = {
       id: uuid(),
       ownerUid: uid,
+      // Conditional spread: Firestore rejects undefined field values.
+      ...(ownerName ? { ownerName } : {}),
       ...DEFAULT_PROJECT,
       ...(name ? { name, fontName: name.toLowerCase().replace(/\s+/g, '-'), fontFamily: name.toLowerCase().replace(/\s+/g, '-') } : {}),
       createdAt: now,
@@ -85,7 +103,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     };
     const { id, ...data } = project;
     await setDoc(doc(firestore, 'project', id), data);
-    const projects = await fetchProjects(uid);
+    const projects = await fetchProjects();
     set({ projects, currentProjectId: project.id, currentProject: project });
     localStorage.setItem('currentProjectId', project.id);
     return project;
@@ -122,13 +140,13 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   },
 
   deleteProject: async (id: string) => {
-    const uid = requireUid();
+    requireUid();
     const iconsSnap = await getDocs(query(collection(firestore, 'icons'), where('parent', '==', id)));
     if (!iconsSnap.empty) {
       const iconIds = iconsSnap.docs.map(d => d.id);
       // Icon docs first (no artwork fallback in metadata-only docs), then R2
       // cleanup while the project doc still exists — the delete API's
-      // ownership check reads it. Orphan blobs on failure are harmless.
+      // existence check reads it. Orphan blobs on failure are harmless.
       const batch = writeBatch(firestore);
       iconsSnap.docs.forEach(d => batch.delete(d.ref));
       await batch.commit();
@@ -150,7 +168,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       }
     }
     await deleteDoc(doc(firestore, 'project', id));
-    const projects = await fetchProjects(uid);
+    const projects = await fetchProjects();
     if (get().currentProjectId === id) {
       localStorage.removeItem('currentProjectId');
       set({ projects, currentProjectId: null, currentProject: null });

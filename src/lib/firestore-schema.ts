@@ -43,6 +43,7 @@ export function validateProject(id: string, data: unknown): Project {
   return {
     id,
     ownerUid: required.ownerUid as string,
+    ownerName: isString(d.ownerName) ? d.ownerName : undefined,
     name: required.name as string,
     fontName: required.fontName as string,
     fontFamily: required.fontFamily as string,

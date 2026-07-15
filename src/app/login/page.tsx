@@ -6,13 +6,15 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/layout/logo';
 import { useAuth } from '@/hooks/use-auth';
+import { ALLOWED_EMAIL_DOMAIN } from '@/lib/auth-domain';
 import styles from '@/app/styles/login.module.css';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user, loading, signIn } = useAuth();
+  const { user, loading, authError, signIn } = useAuth();
   const [signingIn, setSigningIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const message = error ?? authError;
 
   useEffect(() => {
     if (!loading && user) router.replace('/projects');
@@ -46,7 +48,8 @@ export default function LoginPage() {
           <h1 className={styles.brandTitle}>Icon Font Generator</h1>
         </div>
         <p className={styles.subtitle}>
-          Sign in to manage your icon font projects.
+          Sign in with your @{ALLOWED_EMAIL_DOMAIN} Google account to manage the
+          team&apos;s icon font projects.
         </p>
         <Button
           onClick={handleSignIn}
@@ -66,7 +69,7 @@ export default function LoginPage() {
           )}
           Sign in with Google
         </Button>
-        {error && <p className={styles.error}>{error}</p>}
+        {message && <p className={styles.error}>{message}</p>}
       </div>
     </div>
   );

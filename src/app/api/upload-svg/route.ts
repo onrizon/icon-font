@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { r2, BUCKET, R2_PUBLIC_URL } from '@/lib/r2';
-import { verifyIdTokenFromRequest, assertProjectOwnership, HttpError } from '@/lib/firebase-admin';
+import { verifyIdTokenFromRequest, assertProjectExists, HttpError } from '@/lib/firebase-admin';
 
 const ID_PATTERN = /^[a-zA-Z0-9_-]{1,64}$/;
 // Must exceed the client-side MAX_IMPORT_SVG_BYTES (2 MB, svg-pipeline.ts) and
@@ -12,7 +12,7 @@ const MAX_SVG_BYTES = 4 * 1024 * 1024;
 
 export async function POST(req: NextRequest) {
   try {
-    const { uid } = await verifyIdTokenFromRequest(req);
+    await verifyIdTokenFromRequest(req);
 
     const formData = await req.formData();
     const file = formData.get('file');
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'SVG too large' }, { status: 413 });
     }
 
-    await assertProjectOwnership(projectId, uid);
+    await assertProjectExists(projectId);
 
     const key = `icons/${projectId}/${iconId}.svg`;
     const buffer = Buffer.from(await file.arrayBuffer());

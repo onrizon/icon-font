@@ -1,7 +1,8 @@
 import 'server-only';
 import { initializeApp, getApps, cert, type App } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
+import { getAuth, type DecodedIdToken } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
+import { ALLOWED_EMAIL_DOMAIN, isAllowedEmail } from '@/lib/auth-domain';
 
 function init(): App {
   const existing = getApps();
@@ -36,19 +37,24 @@ export async function verifyIdTokenFromRequest(req: Request): Promise<{ uid: str
   if (!idToken) {
     throw new HttpError(401, 'Empty bearer token');
   }
+  let decoded: DecodedIdToken;
   try {
-    const decoded = await adminAuth.verifyIdToken(idToken);
-    return { uid: decoded.uid };
+    decoded = await adminAuth.verifyIdToken(idToken);
   } catch {
     throw new HttpError(401, 'Invalid or expired token');
   }
+  // Outside the try: a domain failure must surface as 403, not be swallowed
+  // into the catch-all 401 above.
+  if (decoded.email_verified !== true || !isAllowedEmail(decoded.email)) {
+    throw new HttpError(403, `Access restricted to @${ALLOWED_EMAIL_DOMAIN} accounts`);
+  }
+  return { uid: decoded.uid };
 }
 
-export async function assertProjectOwnership(projectId: string, uid: string): Promise<void> {
+/** Shared workspace: the project must exist (404), but any domain user may act on it. */
+export async function assertProjectExists(projectId: string): Promise<void> {
   const snap = await adminFirestore.collection('project').doc(projectId).get();
   if (!snap.exists) throw new HttpError(404, 'Project not found');
-  const ownerUid = snap.get('ownerUid');
-  if (ownerUid !== uid) throw new HttpError(403, 'Forbidden');
 }
 
 export class HttpError extends Error {

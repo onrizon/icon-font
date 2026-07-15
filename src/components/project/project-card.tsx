@@ -135,7 +135,12 @@ export function ProjectCard({ project, iconCount }: ProjectCardProps) {
         </div>
 
         <div className={styles.footer}>
-          Updated {formatRelative(project.updatedAt)}
+          <span className={styles.owner} title={project.ownerName || undefined}>
+            {project.ownerName || 'Unknown owner'}
+          </span>
+          <span className={styles.updated}>
+            Updated {formatRelative(project.updatedAt)}
+          </span>
         </div>
       </div>
 

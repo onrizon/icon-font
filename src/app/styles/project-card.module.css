@@ -83,6 +83,21 @@
   padding-top: 1rem;
   font-size: 0.75rem;
   color: var(--muted-foreground);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.owner {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.updated {
+  flex-shrink: 0;
 }
 
 .destructiveItem {
